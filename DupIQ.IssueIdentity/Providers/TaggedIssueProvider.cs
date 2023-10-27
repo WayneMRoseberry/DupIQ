@@ -1,5 +1,4 @@
-﻿using DupIQ.IssueIdentity;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using System.Text.RegularExpressions;
 

@@ -4,7 +4,6 @@ using Microsoft.ML;
 using Microsoft.ML.Transforms.Text;
 using Pinecone;
 using Pinecone.Grpc;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace DupIQ.IssueIdentityProviders.Word2Vec_Pinecone
