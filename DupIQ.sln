@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DupIQ.IssueIdentity", "DupI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DupIQ.IssueIdentityProviders.Sql", "DupIQ.IssueIdentityProviders.Sql\DupIQ.IssueIdentityProviders.Sql.csproj", "{8B59C640-8266-4257-8678-33DF458B9BA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DupIQ.IssueIdentityProviders.Word2Vec_Pinecone", "DupIQ.IssueIdentityProviders.Word2Vec_Pinecone\DupIQ.IssueIdentityProviders.Word2Vec_Pinecone.csproj", "{F3A92C4D-CD9C-4881-93CF-BFCEAB31FB1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8B59C640-8266-4257-8678-33DF458B9BA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B59C640-8266-4257-8678-33DF458B9BA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B59C640-8266-4257-8678-33DF458B9BA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3A92C4D-CD9C-4881-93CF-BFCEAB31FB1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3A92C4D-CD9C-4881-93CF-BFCEAB31FB1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3A92C4D-CD9C-4881-93CF-BFCEAB31FB1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3A92C4D-CD9C-4881-93CF-BFCEAB31FB1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
