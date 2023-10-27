@@ -2,7 +2,6 @@
 using DupIQ.IssueIdentity.Providers;
 using DupIQ.IssueIdentityProviders.Sql;
 using DupIQ.IssueIdentityProviders.Word2Vec_Pinecone;
-using System.Runtime.CompilerServices;
 
 namespace DupIQ.IssueIdentityAPI
 {
