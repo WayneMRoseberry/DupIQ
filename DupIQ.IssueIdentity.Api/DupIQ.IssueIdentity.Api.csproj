@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e116f692-13b1-46df-ae3d-90114fdfb7aa</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DupIQ.IssueIdentityProviders.Sql\DupIQ.IssueIdentityProviders.Sql.csproj" />
+    <ProjectReference Include="..\DupIQ.IssueIdentityProviders.Word2Vec_Pinecone\DupIQ.IssueIdentityProviders.Word2Vec_Pinecone.csproj" />
+    <ProjectReference Include="..\DupIQ.IssueIdentity\DupIQ.IssueIdentity.csproj" />
+  </ItemGroup>
+
+</Project>

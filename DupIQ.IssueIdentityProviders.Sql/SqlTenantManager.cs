@@ -32,11 +32,13 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public void AddProject(string tenantId, Project project)
 		{
+			project.ProjectId = project.ProjectId.Trim();
 			_databaseHelper.AddOrUpdateProject(tenantId, project);
 		}
 
 		public string AddTenant(TenantProfile tenantProfile)
 		{
+			tenantProfile.TenantId = tenantProfile.TenantId.Trim();
 			_databaseHelper.AddOrUpdateTenantProfile(tenantProfile);
 			return tenantProfile.TenantId;
 		}
