@@ -1,4 +1,3 @@
-using DupIQ.IssueIdentity;
 using DupIQ.IssueIdentity.Providers;
 
 namespace DupIQ.IssueIdentity.Tests

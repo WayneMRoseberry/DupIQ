@@ -1,6 +1,4 @@
-﻿using DupIQ.IssueIdentity;
-
-namespace DupIQ.IssueIdentity.Tests
+﻿namespace DupIQ.IssueIdentity.Tests
 {
 	public class MockTenantManager : ITenantManager
 	{

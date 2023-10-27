@@ -1,4 +1,3 @@
-using DupIQ.IssueIdentity;
 using DupIQ.IssueIdentityProviders.Word2Vec_Pinecone;
 
 namespace DupIQ.IssueIdentity.Tests

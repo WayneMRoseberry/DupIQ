@@ -1,12 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using DupIQ.IssueIdentity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DupIQ.IssueIdentity;
+using Microsoft.Extensions.Configuration;
 using System.Data.Common;
-using NuGet.Frameworks;
 
 namespace DupIQ.IssueIdentityProviders.Sql.Tests
 {

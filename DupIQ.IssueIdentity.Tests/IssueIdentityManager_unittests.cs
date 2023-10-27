@@ -1,4 +1,3 @@
-using DupIQ.IssueIdentity;
 using Microsoft.Extensions.Logging;
 
 namespace DupIQ.IssueIdentity.Tests

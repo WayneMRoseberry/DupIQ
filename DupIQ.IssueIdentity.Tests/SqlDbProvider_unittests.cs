@@ -1,4 +1,3 @@
-using DupIQ.IssueIdentity;
 using DupIQ.IssueIdentityProviders.Sql;
 using System.Data;
 
