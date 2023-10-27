@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DupIQ.IssueIdentityProvider
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DupIQ.IssueIdentity.Tests", "DupIQ.IssueIdentity.Tests\DupIQ.IssueIdentity.Tests.csproj", "{52D37148-6463-415A-AA19-7BE2AF56BF04}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DupIQ.IssueIdentityProviders.Sql.Tests", "DupIQ.IssueIdentityProviders.Sql.Tests\DupIQ.IssueIdentityProviders.Sql.Tests.csproj", "{77B0C111-4D89-4BDB-AF0A-4BB9C2CFD660}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{52D37148-6463-415A-AA19-7BE2AF56BF04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52D37148-6463-415A-AA19-7BE2AF56BF04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52D37148-6463-415A-AA19-7BE2AF56BF04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77B0C111-4D89-4BDB-AF0A-4BB9C2CFD660}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77B0C111-4D89-4BDB-AF0A-4BB9C2CFD660}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77B0C111-4D89-4BDB-AF0A-4BB9C2CFD660}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77B0C111-4D89-4BDB-AF0A-4BB9C2CFD660}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
