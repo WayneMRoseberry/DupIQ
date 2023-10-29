@@ -60,28 +60,85 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
-		public void Post_ReportIssue()
+		public void POST_ReportIssue()
 		{
-			const string postBody = @"{""instanceId"":""testinstance"",""issueId"":""replaced"",""isNew"":""true"",""issueDate"":""2023-10-28T17:42:40.837Z"",""issueMessage"":""this is a test""}";
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
 
 			string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			string testMessage = "somethingnew";
-
 			HttpWebRequest request = CreatePostRequest(postBody, requestUri);
 
 			var webResponse = request.GetResponse();
-			Console.WriteLine("get response stream");
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var responseJson = JsonSerializer.Deserialize<IssueProfile>(response);
+
+				Assert.AreEqual("this is a test", responseJson.exampleMessage, "Fail if the example message does not match issue entered.");
+				Assert.IsTrue(responseJson.isNew, "Fail if the issue is not reported as new.");
+			}
+		}
+
+		[TestMethod]
+		public void ReportMultipleIssuesAndSeeIfVisibleViaOtherApis()
+		{
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
+
+			string postIssueReportRequestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			HttpWebRequest request = CreatePostRequest(postBody, postIssueReportRequestUri);
+
+			var webResponse = request.GetResponse();
+			string issueId = string.Empty;
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				Console.WriteLine("read the response");
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
-				var responseJson = JsonSerializer.Deserialize<JsonElement>(response);
+				var responseJson = JsonSerializer.Deserialize<IssueProfile>(response);
+				issueId = responseJson.issueId;
+				Assert.AreEqual("this is a test", responseJson.exampleMessage, "Fail if the example message does not match issue entered.");
+				Assert.IsTrue(responseJson.isNew, "Fail if the issue is not reported as new.");
+			}
 
-				string returnedExampleMessage = responseJson.GetProperty("exampleMessage").GetString();
-				bool returnedIsNew = responseJson.GetProperty("isNew").GetBoolean();
-				Assert.AreEqual("this is a test", returnedExampleMessage, "Fail if did not get back expected message.");
-				Assert.IsTrue(returnedIsNew, "Fail if the reported issue was not new.");
+			issueReport.instanceId = "testinstance2";
+			postBody = JsonSerializer.Serialize(issueReport);
+			request = CreatePostRequest(postBody, postIssueReportRequestUri);
+
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var responseJson = JsonSerializer.Deserialize<IssueProfile>(response);
+
+				Assert.AreEqual("this is a test", responseJson.exampleMessage, "Fail if the example message does not match issue entered.");
+				Assert.IsFalse(responseJson.isNew, "Fail if the issue is reported as new after posting report second time.");
+			}
+
+			string getIssueReportsRelatedToIssueIdUri = UriBase + $"/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
+			request = CreateGetRequest(getIssueReportsRelatedToIssueIdUri);
+			webResponse = request.GetResponse();
+			using(var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				Console.WriteLine("read the response");
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var responseJson = JsonSerializer.Deserialize<IssueReport[]>(response);
+				Assert.AreEqual(2, responseJson.Count(), "Fail if there are not two related issue reports returned for the issue profile.");
 			}
 		}
 
@@ -109,6 +166,17 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			{
 				writer.Write(postBody);
 			}
+
+			return request;
+		}
+
+		private HttpWebRequest CreateGetRequest(string requestUri)
+		{
+			HttpClient httpClient = CreateHttpClient();
+			var request = (HttpWebRequest)WebRequest.Create(requestUri);
+			request.Method = "GET";
+			request.ContentType = "application/json";
+			request.Headers.Add("Access-Control-Allow-Origin", "*");
 
 			return request;
 		}
