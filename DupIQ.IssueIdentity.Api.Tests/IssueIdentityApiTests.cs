@@ -42,21 +42,17 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string testMessage = "somethingnew";
 
 			string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={testMessage}";
-			Console.WriteLine($"Report Issue Uri: {requestUri}");
-			var responseMessage = httpClient.GetAsync(requestUri).Result;
-			Console.WriteLine($"responseMessage: {responseMessage}");
-			Assert.AreEqual(HttpStatusCode.OK, responseMessage.StatusCode, "Fail if the request was not successful.");
 
-			string body = responseMessage.Content.ReadAsStringAsync().Result;
-			Console.WriteLine($"responseMessage.Content: {body}");
-
-			var jsonResponse = JsonSerializer.Deserialize<JsonElement>(body);
-			var returnedIssueId = jsonResponse.GetProperty("issueId").GetString();
-			var returnedIsNew = jsonResponse.GetProperty("isNew").GetBoolean();
-			var returnedExampleMessage = jsonResponse.GetProperty("exampleMessage").GetString();
-			Console.WriteLine($"{returnedIssueId}:{returnedIsNew}:{returnedExampleMessage}");
-			Assert.AreEqual(testMessage, returnedExampleMessage, "Fail if the example message of the returned issue is not what was sent.");
-			Assert.AreEqual(true, returnedIsNew, "Fail if the issue was not reported as new.");
+			WebRequest webRequest = CreateGetRequest(requestUri);
+			WebResponse webResponse = webRequest.GetResponse();
+			using(var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
+				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
+			}
 		}
 
 		[TestMethod]
@@ -79,10 +75,10 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			{
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
-				var responseJson = JsonSerializer.Deserialize<IssueProfile>(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
 
-				Assert.AreEqual("this is a test", responseJson.exampleMessage, "Fail if the example message does not match issue entered.");
-				Assert.IsTrue(responseJson.isNew, "Fail if the issue is not reported as new.");
+				Assert.AreEqual("this is a test", issueProfileResponse.exampleMessage, "Fail if the example message does not match issue entered.");
+				Assert.IsTrue(issueProfileResponse.isNew, "Fail if the issue is not reported as new.");
 			}
 		}
 
@@ -108,10 +104,10 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Console.WriteLine("read the response");
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
-				var responseJson = JsonSerializer.Deserialize<IssueProfile>(response);
-				issueId = responseJson.issueId;
-				Assert.AreEqual("this is a test", responseJson.exampleMessage, "Fail if the example message does not match issue entered.");
-				Assert.IsTrue(responseJson.isNew, "Fail if the issue is not reported as new.");
+				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				issueId = issueProfileResponse.issueId;
+				Assert.AreEqual("this is a test", issueProfileResponse.exampleMessage, "Fail if the example message does not match issue entered.");
+				Assert.IsTrue(issueProfileResponse.isNew, "Fail if the issue is not reported as new.");
 			}
 
 			issueReport.instanceId = "testinstance2";
@@ -123,10 +119,10 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			{
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
-				var responseJson = JsonSerializer.Deserialize<IssueProfile>(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
 
-				Assert.AreEqual("this is a test", responseJson.exampleMessage, "Fail if the example message does not match issue entered.");
-				Assert.IsFalse(responseJson.isNew, "Fail if the issue is reported as new after posting report second time.");
+				Assert.AreEqual("this is a test", issueProfileResponse.exampleMessage, "Fail if the example message does not match issue entered.");
+				Assert.IsFalse(issueProfileResponse.isNew, "Fail if the issue is reported as new after posting report second time.");
 			}
 
 			string getIssueReportsRelatedToIssueIdUri = UriBase + $"/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
@@ -137,8 +133,8 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Console.WriteLine("read the response");
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
-				var responseJson = JsonSerializer.Deserialize<IssueReport[]>(response);
-				Assert.AreEqual(2, responseJson.Count(), "Fail if there are not two related issue reports returned for the issue profile.");
+				var issueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
+				Assert.AreEqual(2, issueReportsResponse.Count(), "Fail if there are not two related issue reports returned for the issue profile.");
 			}
 		}
 
