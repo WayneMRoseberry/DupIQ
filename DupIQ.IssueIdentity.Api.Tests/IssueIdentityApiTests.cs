@@ -1,9 +1,6 @@
-using System.Net.Http.Headers;
 using System.Net;
-using System.Text;
+using System.Net.Http.Headers;
 using System.Text.Json;
-using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
-using System.Configuration;
 
 namespace DupIQ.IssueIdentity.Api.Tests
 {
@@ -54,11 +51,38 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine($"responseMessage.Content: {body}");
 
 			var jsonResponse = JsonSerializer.Deserialize<JsonElement>(body);
+			var returnedIssueId = jsonResponse.GetProperty("issueId").GetString();
 			var returnedIsNew = jsonResponse.GetProperty("isNew").GetBoolean();
 			var returnedExampleMessage = jsonResponse.GetProperty("exampleMessage").GetString();
 			Console.WriteLine($"{returnedIssueId}:{returnedIsNew}:{returnedExampleMessage}");
 			Assert.AreEqual(testMessage, returnedExampleMessage, "Fail if the example message of the returned issue is not what was sent.");
 			Assert.AreEqual(true, returnedIsNew, "Fail if the issue was not reported as new.");
+		}
+
+		[TestMethod]
+		public void Post_ReportIssue()
+		{
+			const string postBody = @"{""instanceId"":""testinstance"",""issueId"":""replaced"",""isNew"":""true"",""issueDate"":""2023-10-28T17:42:40.837Z"",""issueMessage"":""this is a test""}";
+
+			string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string testMessage = "somethingnew";
+
+			HttpWebRequest request = CreatePostRequest(postBody, requestUri);
+
+			var webResponse = request.GetResponse();
+			Console.WriteLine("get response stream");
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				Console.WriteLine("read the response");
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var responseJson = JsonSerializer.Deserialize<JsonElement>(response);
+
+				string returnedExampleMessage = responseJson.GetProperty("exampleMessage").GetString();
+				bool returnedIsNew = responseJson.GetProperty("isNew").GetBoolean();
+				Assert.AreEqual("this is a test", returnedExampleMessage, "Fail if did not get back expected message.");
+				Assert.IsTrue(returnedIsNew, "Fail if the reported issue was not new.");
+			}
 		}
 
 		private HttpClient CreateHttpClient()
@@ -68,8 +92,25 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 			httpClient.DefaultRequestHeaders.Accept.Clear();
 			httpClient.DefaultRequestHeaders.Accept.Add(
-			new MediaTypeWithQualityHeaderValue("application/json"));
+			new MediaTypeWithQualityHeaderValue("text/plain"));
+			httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
 			return httpClient;
+		}
+
+		private HttpWebRequest CreatePostRequest(string postBody, string requestUri)
+		{
+			HttpClient httpClient = CreateHttpClient();
+			var request = (HttpWebRequest)WebRequest.Create(requestUri);
+			request.Method = "POST";
+			request.ContentType = "application/json";
+			request.Headers.Add("Access-Control-Allow-Origin", "*");
+			Console.WriteLine("writing to request stream");
+			using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+			{
+				writer.Write(postBody);
+			}
+
+			return request;
 		}
 
 		private void CreateSharedProject(HttpClient httpClient)
