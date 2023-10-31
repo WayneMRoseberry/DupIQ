@@ -168,8 +168,22 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				}
 			}
 			System.Console.WriteLine($"headlines={contentHeadlines.Count()}, issueprofiles={issueProfileCounts.Count}");
+
+			string findRelatedIssuesUri = $"{UriBase}/IssueProfiles/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={Uri.EscapeUriString(contentHeadlines[0])}";
+			WebRequest webRequest = CreateGetRequest(findRelatedIssuesUri);
+			var response = webRequest.GetResponse();
+			int relatedProfilesCount = 0;
+			using(var responseReader = new StreamReader(response.GetResponseStream()))
+			{
+				string respContent = responseReader.ReadToEnd();
+				RelatedIssueProfile[] relatedIssueProfiles = JsonSerializer.Deserialize<RelatedIssueProfile[]>(respContent);
+				relatedProfilesCount = relatedIssueProfiles.Count();
+				System.Console.WriteLine($"relatedIssueProfiles.Count={relatedProfilesCount}");
+			}
+
 			double ratio = ((double)issueProfileCounts.Count) / ((double)contentHeadlines.Count());
 			Assert.IsTrue(ratio > 0.1, "Fail if the content provided did not yield more than a 0.1 ratio of issues to issue reports.");
+			Assert.IsTrue(relatedProfilesCount > 1, "Fail if there is not more than 1 related issue profile returned.");
 		}
 
 		private HttpWebRequest CreateDeleteRequest(string requestUri)
