@@ -21,27 +21,30 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		public void InitializeDupIq()
 		{
 			InitializeFromConfig();
-			HttpClient httpClient = CreateHttpClient();
-			CreateSharedTenant(httpClient);
-			CreateSharedProject(httpClient);
+			CreateSharedTenant();
+			CreateSharedProject();
 		}
 
 		[TestCleanup]
 		public void Cleanup()
 		{
-			HttpClient client = CreateHttpClient();
-			HttpResponseMessage httpResponseMessage = client.DeleteAsync(UriBase + $"/Admin/allrecords?tenantId={_sharedTenantId}&projectId={_sharedProjectId}").Result;
-			Console.WriteLine($"Response to delete all records: {httpResponseMessage}");
-			Assert.AreEqual(HttpStatusCode.OK, httpResponseMessage.StatusCode, "Failed to delete content.");
+			string deleteRequestUri = $"{UriBase}/Admin/allrecords?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+
+			HttpWebRequest webRequest = CreateDeleteRequest(deleteRequestUri);
+			WebResponse webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+				Console.WriteLine($"Response to delete all records: {responseBody}");
+			}
 		}
 
 		[TestMethod]
 		public void GET_ReportIssue()
 		{
-			HttpClient httpClient = CreateHttpClient();
 			string testMessage = "somethingnew";
 
-			string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={testMessage}";
+			string requestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={testMessage}";
 
 			WebRequest webRequest = CreateGetRequest(requestUri);
 			WebResponse webResponse = webRequest.GetResponse();
@@ -67,7 +70,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			};
 			string postBody = JsonSerializer.Serialize(issueReport);
 
-			string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string requestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 			HttpWebRequest request = CreatePostRequest(postBody, requestUri);
 
 			var webResponse = request.GetResponse();
@@ -94,7 +97,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			};
 			string postBody = JsonSerializer.Serialize(issueReport);
 
-			string postIssueReportRequestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string postIssueReportRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 			HttpWebRequest request = CreatePostRequest(postBody, postIssueReportRequestUri);
 
 			var webResponse = request.GetResponse();
@@ -150,8 +153,8 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			{
 				System.Console.WriteLine($" - posting line {lineCounter}.");
 				lineCounter++;
-				string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={Uri.EscapeDataString(line)}";
-				HttpWebRequest req = CreateGetRequest(requestUri);
+				string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={Uri.EscapeDataString(line)}";
+				HttpWebRequest req = CreateGetRequest(reportIssuePostRequestUri);
 				var resp = req.GetResponse();
 				using(var responseReader = new StreamReader(resp.GetResponseStream()))
 				{
@@ -169,21 +172,28 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Assert.IsTrue(ratio > 0.1, "Fail if the content provided did not yield more than a 0.1 ratio of issues to issue reports.");
 		}
 
-		private HttpClient CreateHttpClient()
+		private HttpWebRequest CreateDeleteRequest(string requestUri)
 		{
-			HttpClient httpClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
-			httpClient.BaseAddress = new Uri(UriBase);
-			System.Net.ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-			httpClient.DefaultRequestHeaders.Accept.Clear();
-			httpClient.DefaultRequestHeaders.Accept.Add(
-			new MediaTypeWithQualityHeaderValue("text/plain"));
-			httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
-			return httpClient;
+			var request = (HttpWebRequest)WebRequest.Create(requestUri);
+			request.Method = "DELETE";
+			request.ContentType = "application/json";
+			request.Headers.Add("Access-Control-Allow-Origin", "*");
+
+			return request;
+		}
+
+		private HttpWebRequest CreateGetRequest(string requestUri)
+		{
+			var request = (HttpWebRequest)WebRequest.Create(requestUri);
+			request.Method = "GET";
+			request.ContentType = "application/json";
+			request.Headers.Add("Access-Control-Allow-Origin", "*");
+
+			return request;
 		}
 
 		private HttpWebRequest CreatePostRequest(string postBody, string requestUri)
 		{
-			HttpClient httpClient = CreateHttpClient();
 			var request = (HttpWebRequest)WebRequest.Create(requestUri);
 			request.Method = "POST";
 			request.ContentType = "application/json";
@@ -197,26 +207,15 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			return request;
 		}
 
-		private HttpWebRequest CreateGetRequest(string requestUri)
-		{
-			HttpClient httpClient = CreateHttpClient();
-			var request = (HttpWebRequest)WebRequest.Create(requestUri);
-			request.Method = "GET";
-			request.ContentType = "application/json";
-			request.Headers.Add("Access-Control-Allow-Origin", "*");
-
-			return request;
-		}
-
-		private void CreateSharedProject(HttpClient httpClient)
+		private void CreateSharedProject()
 		{
 			Project testProject = new Project()
 			{
-				tenantId=_sharedTenantId,
-				projectId=_sharedProjectId,
-				name=_sharedProjectName,
-				ownerId=_ownerId,
-				similarityThreshold=0.95f
+				tenantId = _sharedTenantId,
+				projectId = _sharedProjectId,
+				name = _sharedProjectName,
+				ownerId = _ownerId,
+				similarityThreshold = 0.95f
 			};
 			string addProjectUriBase = $"{UriBase}/Tenant/Project?tenantId={_sharedTenantId}";
 			string serializedProjectJson = JsonSerializer.Serialize(testProject);
@@ -226,7 +225,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 			WebRequest webRequest = CreatePostRequest(serializedProjectJson, addProjectUriBase);
 			WebResponse webResponse = webRequest.GetResponse();
-			using(var stream = webResponse.GetResponseStream())
+			using (var stream = webResponse.GetResponseStream())
 			{
 				StreamReader sr = new StreamReader(stream);
 				string projectBody = sr.ReadToEnd();
@@ -234,18 +233,19 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 		}
 
-		private void CreateSharedTenant(HttpClient httpClient)
+		private void CreateSharedTenant()
 		{
 			string AddTenantURITemplate = $"{UriBase}/Tenant/Tenant?tenantName={_tenantName}&ownerId={_ownerId}&ownerEmail={_ownerEmail}&ownerName={_ownerName}";
 			Console.WriteLine($"Create tenant Uri:{AddTenantURITemplate}");
 
-			using (StringContent jsonContent = new StringContent(string.Empty))
+			WebRequest webRequest = CreatePostRequest(string.Empty, AddTenantURITemplate);
+			WebResponse webResponse = webRequest.GetResponse();
+			using (var stream = webResponse.GetResponseStream())
 			{
-				var responseMessage = httpClient.PostAsync(AddTenantURITemplate, jsonContent).Result;
-				Assert.AreEqual(HttpStatusCode.OK, responseMessage.StatusCode, "Abort if could not create the test tenant.");
-
-				_sharedTenantId = responseMessage.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
+				StreamReader sr = new StreamReader(stream);
+				_sharedTenantId = sr.ReadToEnd().Replace("\"", string.Empty);
 				Console.WriteLine($"Shared TenantId = {_sharedTenantId}");
+
 			}
 		}
 
