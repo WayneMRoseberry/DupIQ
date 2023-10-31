@@ -372,6 +372,7 @@ CREATE TABLE [dbo].[IssueProfiles](
 			builder.Password = config.Password;
 			builder.Authentication = SqlAuthenticationMethod.SqlPassword;
 			builder.Encrypt = false;
+			builder.Pooling = false;
 
 			SqlConnection sqlConnection = new SqlConnection(builder.ConnectionString);
 			return sqlConnection;
@@ -383,19 +384,78 @@ CREATE TABLE [dbo].[IssueProfiles](
 			{
 				throw new ArgumentException();
 			}
-			SqlConnection connection = CreateSqlConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueProfiles WHERE Id = @Id AND TenantId = @TenantId AND ProjectId = @ProjectId", connection))
-			{
+			using (SqlConnection connection = CreateSqlConnection())
+			{ 
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM IssueProfiles WHERE Id = @Id AND TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+				{
 
-				command.Parameters.AddWithValue("@Id", issueId);
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@ProjectId", projectId);
+					command.Parameters.AddWithValue("@Id", issueId);
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@ProjectId", projectId);
 
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+					return RunIssueProfileQueryAndReturnDataReader(command);
+				}
 			}
+		}
+
+		private static DbDataReader RunIssueProfileQueryAndReturnDataReader(SqlCommand command)
+		{
+			SqlDataReader sqlDataReader = command.ExecuteReader();
+			DataTable dataTable = CreateIssueProfileDataTable();
+			while (sqlDataReader.Read())
+			{
+				AddSqlDataReaderRowToIssueProfileTable(sqlDataReader, dataTable);
+			}
+			return dataTable.CreateDataReader();
+		}
+
+		private static DbDataReader RunIssueReportsQueryAndReturnDataReader(SqlCommand command)
+		{
+			SqlDataReader sqlDataReader = command.ExecuteReader();
+			DataTable dataTable = CreateIssueReportsDataTable();
+			while (sqlDataReader.Read())
+			{
+				AddSqlDataReaderRowToIssueReportsTable(sqlDataReader, dataTable);
+			}
+			return dataTable.CreateDataReader();
+		}
+
+		private static DataRow AddSqlDataReaderRowToIssueProfileTable(SqlDataReader sqlDataReader, DataTable dataTable)
+		{
+			return dataTable.Rows.Add(
+										sqlDataReader["Id"].ToString().Trim(),
+										sqlDataReader["ExampleMessage"].ToString().Trim(),
+										Convert.ToDateTime(sqlDataReader["FirstReportedDate"].ToString().Trim())
+										);
+		}
+
+		private static DataRow AddSqlDataReaderRowToIssueReportsTable(SqlDataReader sqlDataReader, DataTable dataTable)
+		{
+			return dataTable.Rows.Add(
+										sqlDataReader["InstanceId"].ToString().Trim(),
+										sqlDataReader["IssueId"].ToString().Trim(),
+										sqlDataReader["IssueMessage"].ToString().Trim(),
+										Convert.ToDateTime(sqlDataReader["IssueDate"].ToString().Trim())
+										);
+		}
+
+		private static DataTable CreateIssueProfileDataTable()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("Id", typeof(string));
+			dataTable.Columns.Add("ExampleMessage", typeof(string));
+			dataTable.Columns.Add("FirstReportedDate", typeof(DateTime));
+			return dataTable;
+		}
+		private static DataTable CreateIssueReportsDataTable()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("InstanceId", typeof(string));
+			dataTable.Columns.Add("IssueId", typeof(string));
+			dataTable.Columns.Add("IssueMessage", typeof(string));
+			dataTable.Columns.Add("IssueDate", typeof(DateTime));
+			return dataTable;
 		}
 
 		private DbDataReader GetIssueProfiles(string tenantId, string projectId)
@@ -404,16 +464,16 @@ CREATE TABLE [dbo].[IssueProfiles](
 			{
 				throw new ArgumentException();
 			}
-			SqlConnection connection = CreateSqlConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueProfiles WHERE TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+			using (SqlConnection connection = CreateSqlConnection())
 			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@ProjectId", projectId);
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM IssueProfiles WHERE TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@ProjectId", projectId);
 
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+					return RunIssueProfileQueryAndReturnDataReader(command);
+				}
 			}
 		}
 
@@ -423,19 +483,20 @@ CREATE TABLE [dbo].[IssueProfiles](
 			{
 				throw new ArgumentException();
 			}
-			SqlConnection connection = CreateSqlConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueReports WHERE InstanceId = @InstanceId AND TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+			using (SqlConnection connection = CreateSqlConnection())
 			{
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM IssueReports WHERE InstanceId = @InstanceId AND TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+				{
 
-				command.Parameters.AddWithValue("@InstanceId", instanceId);
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@ProjectId", projectId);
+					command.Parameters.AddWithValue("@InstanceId", instanceId);
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@ProjectId", projectId);
 
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+					return RunIssueReportsQueryAndReturnDataReader(command);
+				}
 			}
+
 		}
 
 		private DbDataReader GetIssueReports(IssueProfile issueProfile, string tenantId, string projectId)
@@ -448,18 +509,18 @@ CREATE TABLE [dbo].[IssueProfiles](
 			{
 				throw new ArgumentException();
 			}
-			SqlConnection connection = CreateSqlConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueReports WHERE IssueId = @IssueId AND TenantId = @TenantId AND ProjectId = @ProjectId", connection))
-			{
+			using (SqlConnection connection = CreateSqlConnection()) 
+			{ 
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM IssueReports WHERE IssueId = @IssueId AND TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+				{
 
-				command.Parameters.AddWithValue("@IssueId", issueProfile.IssueId);
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@ProjectId", projectId);
+					command.Parameters.AddWithValue("@IssueId", issueProfile.IssueId);
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@ProjectId", projectId);
 
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+					return RunIssueReportsQueryAndReturnDataReader(command);
+				}
 			}
 		}
 

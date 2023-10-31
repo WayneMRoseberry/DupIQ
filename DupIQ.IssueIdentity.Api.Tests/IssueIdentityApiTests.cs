@@ -138,6 +138,37 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 		}
 
+		[TestMethod]
+		public void PostBatchOfIssueReports()
+		{
+			string similarHeadlineFile = AppContext.BaseDirectory + "\\similarheadlines.txt";
+			string[] contentHeadlines = System.IO.File.ReadAllLines(similarHeadlineFile);
+
+			Dictionary<string, int> issueProfileCounts = new Dictionary<string, int>();
+			int lineCounter = 0;
+			foreach(string line in contentHeadlines)
+			{
+				System.Console.WriteLine($" - posting line {lineCounter}.");
+				lineCounter++;
+				string requestUri = UriBase + $"/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={Uri.EscapeDataString(line)}";
+				HttpWebRequest req = CreateGetRequest(requestUri);
+				var resp = req.GetResponse();
+				using(var responseReader = new StreamReader(resp.GetResponseStream()))
+				{
+					string respContent = responseReader.ReadToEnd();
+					IssueProfile issueProfile = JsonSerializer.Deserialize<IssueProfile>(respContent);
+					if(!issueProfileCounts.ContainsKey(issueProfile.issueId))
+					{
+						issueProfileCounts.Add(issueProfile.issueId, 0);
+					}
+					issueProfileCounts[issueProfile.issueId]++;
+				}
+			}
+			System.Console.WriteLine($"headlines={contentHeadlines.Count()}, issueprofiles={issueProfileCounts.Count}");
+			double ratio = ((double)issueProfileCounts.Count) / ((double)contentHeadlines.Count());
+			Assert.IsTrue(ratio > 0.1, "Fail if the content provided did not yield more than a 0.1 ratio of issues to issue reports.");
+		}
+
 		private HttpClient CreateHttpClient()
 		{
 			HttpClient httpClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
@@ -179,9 +210,27 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 		private void CreateSharedProject(HttpClient httpClient)
 		{
-			using (StringContent jsonContent = new StringContent($"{{n\"projectId\": \"{_sharedProjectId}\",\"tenantId\": \"{_sharedTenantId}\",\"name\":\"{_sharedProjectName}\",\"ownerId\":\"{_ownerId}\",\"similarityThreshold\":0}}"))
+			Project testProject = new Project()
 			{
-				var responseMessage = httpClient.PostAsync(UriBase + $"/Tenant/Project?tenantId={_sharedTenantId}", jsonContent).Result;
+				tenantId=_sharedTenantId,
+				projectId=_sharedProjectId,
+				name=_sharedProjectName,
+				ownerId=_ownerId,
+				similarityThreshold=0.95f
+			};
+			string addProjectUriBase = $"{UriBase}/Tenant/Project?tenantId={_sharedTenantId}";
+			string serializedProjectJson = JsonSerializer.Serialize(testProject);
+
+			Console.WriteLine($" addProjectUriBase:{addProjectUriBase}");
+			Console.WriteLine($" serializedProjectJson:{serializedProjectJson}");
+
+			WebRequest webRequest = CreatePostRequest(serializedProjectJson, addProjectUriBase);
+			WebResponse webResponse = webRequest.GetResponse();
+			using(var stream = webResponse.GetResponseStream())
+			{
+				StreamReader sr = new StreamReader(stream);
+				string projectBody = sr.ReadToEnd();
+				Console.WriteLine($"project response:{projectBody}");
 			}
 		}
 
@@ -193,6 +242,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			using (StringContent jsonContent = new StringContent(string.Empty))
 			{
 				var responseMessage = httpClient.PostAsync(AddTenantURITemplate, jsonContent).Result;
+				Assert.AreEqual(HttpStatusCode.OK, responseMessage.StatusCode, "Abort if could not create the test tenant.");
 
 				_sharedTenantId = responseMessage.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
 				Console.WriteLine($"Shared TenantId = {_sharedTenantId}");

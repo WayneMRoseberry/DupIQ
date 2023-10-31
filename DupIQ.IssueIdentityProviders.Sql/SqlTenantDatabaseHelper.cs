@@ -209,7 +209,7 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 			{
 				command.Parameters.AddWithValue("@TenantId", tenantId);
 				command.Parameters.AddWithValue("@ProjectId", projectId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
+				SqlDataReader sqlDataReader = command.ExecuteReader();
 				while (sqlDataReader.Read())
 				{
 					result.TenantId = sqlDataReader["TenantId"].ToString().Trim();
@@ -222,6 +222,7 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 						result.SimilarityThreshold = sim;
 					};
 				}
+				connection.Close();
 				return result;
 			}
 		}
@@ -235,27 +236,30 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 			{
 				command.Parameters.AddWithValue("@tenantId", tenantId);
 				command.Parameters.AddWithValue("@projectId", projectId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
+				SqlDataReader sqlDataReader = command.ExecuteReader();
 				while (sqlDataReader.Read())
 				{
 					string propStuffBlob = sqlDataReader["PropertyJson"].ToString().Trim();
 					result = JsonSerializer.Deserialize<PropStuffer>(propStuffBlob);
 				}
+				connection.Close();
 				return result;
 			}
 		}
 
 		public DbDataReader GetProjects(string tenantId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM Projects WHERE TenantId = @TenantId", connection))
-			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
+			using (SqlConnection connection = GetTenantDBConnection())
+			{ 
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM Projects WHERE TenantId = @TenantId", connection))
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
 
-				return sqlDataReader;
+					return ExecuteProjectQueryAndReturnDataReader(command);
+				}
 			}
+
 		}
 
 		public DbDataReader GetProjects(string tenantId, string userId)
@@ -266,23 +270,158 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 			{
 				command.Parameters.AddWithValue("@TenantId", tenantId);
 				command.Parameters.AddWithValue("@UserId", userId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+				return ExecuteProjectUsersQueryAndReturnDataReader(command);
 			}
+		}
+
+		private static DbDataReader ExecuteProjectUsersQueryAndReturnDataReader(SqlCommand command)
+		{
+			SqlDataReader sqlDataReader = command.ExecuteReader();
+			DataTable dataTable = CreateProjectUsersDataTabe();
+
+			AddReaderRowToProjectUsersTable(sqlDataReader, dataTable);
+
+			return dataTable.CreateDataReader();
+		}
+
+		private static DbDataReader ExecuteProjectQueryAndReturnDataReader(SqlCommand command)
+		{
+			SqlDataReader sqlDataReader = command.ExecuteReader();
+			DataTable dataTable = CreateProjectDataTabe();
+
+			AddReaderRowToProjectTable(sqlDataReader, dataTable);
+
+			return dataTable.CreateDataReader();
+		}
+
+		private static DbDataReader ExecuteTenantQueryAndReturnDataReader(SqlCommand command)
+		{
+			SqlDataReader sqlDataReader = command.ExecuteReader();
+			DataTable dataTable = CreateTenantDataTabe();
+
+			AddReaderRowToTenantTable(sqlDataReader, dataTable);
+
+			return dataTable.CreateDataReader();
+		}
+
+		private static DbDataReader ExecuteTenantUsersQueryAndReturnDataReader(SqlCommand command)
+		{
+			SqlDataReader sqlDataReader = command.ExecuteReader();
+			DataTable dataTable = CreateTenantUsersDataTabe();
+
+			AddReaderRowToTenantUsersTable(sqlDataReader, dataTable);
+
+			return dataTable.CreateDataReader();
+		}
+
+		private static void AddReaderRowToProjectTable(SqlDataReader sqlDataReader, DataTable dataTable)
+		{
+			while (sqlDataReader.Read())
+			{
+				dataTable.Rows.Add(
+					sqlDataReader["TenantId"].ToString().Trim(),
+					sqlDataReader["ProjectId"].ToString().Trim(),
+					sqlDataReader["OwnerId"].ToString().Trim(),
+					sqlDataReader["Name"].ToString().Trim()
+					);
+			}
+		}
+
+		private static void AddReaderRowToProjectUsersTable(SqlDataReader sqlDataReader, DataTable dataTable)
+		{
+			while (sqlDataReader.Read())
+			{
+				dataTable.Rows.Add(
+					sqlDataReader["TenantId"].ToString().Trim(),
+					sqlDataReader["ProjectId"].ToString().Trim(),
+					sqlDataReader["UserId"].ToString().Trim(),
+					sqlDataReader["Role"].ToString().Trim()
+					);
+			}
+		}
+
+		private static void AddReaderRowToTenantTable(SqlDataReader sqlDataReader, DataTable dataTable)
+		{
+			while (sqlDataReader.Read())
+			{
+				dataTable.Rows.Add(
+					sqlDataReader["TenantId"].ToString().Trim(),
+					sqlDataReader["OwnerId"].ToString().Trim(),
+					sqlDataReader["Name"].ToString().Trim()
+					);
+			}
+		}
+
+		private static void AddReaderRowToTenantUsersTable(SqlDataReader sqlDataReader, DataTable dataTable)
+		{
+			while (sqlDataReader.Read())
+			{
+				dataTable.Rows.Add(
+					sqlDataReader["TenantId"].ToString().Trim(),
+					sqlDataReader["UserId"].ToString().Trim(),
+					sqlDataReader["Role"].ToString().Trim()
+					);
+			}
+		}
+
+		private static DataTable CreateProjectDataTabe()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("TenantId", typeof(string));
+			dataTable.Columns.Add("ProjectId", typeof(string));
+			dataTable.Columns.Add("OwnerId", typeof(string));
+			dataTable.Columns.Add("Name", typeof(string));
+			return dataTable;
+		}
+
+		private static DataTable CreateProjectUsersDataTabe()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("TenantId", typeof(string));
+			dataTable.Columns.Add("ProjectId", typeof(string));
+			dataTable.Columns.Add("UserId", typeof(string));
+			dataTable.Columns.Add("Role", typeof(string));
+			return dataTable;
+		}
+		private static DataTable CreateTenantDataTabe()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("TenantId", typeof(string));
+			dataTable.Columns.Add("OwnerId", typeof(string));
+			dataTable.Columns.Add("Name", typeof(string));
+			return dataTable;
+		}
+		private static DataTable CreateTenantUsersDataTabe()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("TenantId", typeof(string));
+			dataTable.Columns.Add("UserId", typeof(string));
+			dataTable.Columns.Add("Role", typeof(string));
+			return dataTable;
 		}
 
 		public DbDataReader GetTenantConfiguration(string tenantId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM TenantsConfigurations WHERE TenantId = @TenantId", connection))
-			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
+			using (SqlConnection connection = GetTenantDBConnection())
+			{ 
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM TenantsConfigurations WHERE TenantId = @TenantId", connection))
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					SqlDataReader sqlDataReader = command.ExecuteReader();
+					DataTable dataTable = new DataTable();
+					dataTable.Columns.Add("TenantId", typeof(string));
+					dataTable.Columns.Add("PropertyJson", typeof(string));
 
-				return sqlDataReader;
+					while(sqlDataReader.Read())
+					{
+						dataTable.Rows.Add(sqlDataReader["TenantId"].ToString().Trim(), sqlDataReader["PropertyJson"].ToString().Trim());
+					}
+
+					return dataTable.CreateDataReader();
+				}			
 			}
+
 		}
 
 		public DbDataReader GetTenantProfile(string tenantId)
@@ -292,9 +431,7 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 			using (SqlCommand command = new SqlCommand("SELECT * FROM Tenants WHERE TenantId = @TenantId", connection))
 			{
 				command.Parameters.AddWithValue("@TenantId", tenantId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+				return ExecuteTenantQueryAndReturnDataReader(command);
 			}
 		}
 
@@ -304,37 +441,51 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 			connection.Open();
 			using (SqlCommand command = new SqlCommand("SELECT * FROM Tenants", connection))
 			{
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+				return ExecuteTenantQueryAndReturnDataReader(command);
 			}
 		}
 
 		public DbDataReader GetTenants(string userId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM TenantUsers WHERE UserId = @UserId", connection))
-			{
-				command.Parameters.AddWithValue("@UserId", userId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
-
-				return sqlDataReader;
+			using (SqlConnection connection = GetTenantDBConnection())
+			{ 
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM TenantUsers WHERE UserId = @UserId", connection))
+				{
+					command.Parameters.AddWithValue("@UserId", userId);
+					return ExecuteTenantUsersQueryAndReturnDataReader(command);
+				}			
 			}
+
 		}
 
 		public DbDataReader GetUserTenantAuthorization(string tenantId, string userId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT Role FROM TenantUsers WHERE TenantId = @TenantId AND UserId = @UserId", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@UserId", userId);
-				SqlDataReader sqlDataReader = command.ExecuteReader(CommandBehavior.CloseConnection);
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT Role FROM TenantUsers WHERE TenantId = @TenantId AND UserId = @UserId", connection))
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@UserId", userId);
+					DataTable dataTable = new DataTable();
+					dataTable.Columns.Add("TenantId", typeof(string));
+					dataTable.Columns.Add("UserId", typeof(string));
+					dataTable.Columns.Add("Role", typeof(string));
 
-				return sqlDataReader;
+					SqlDataReader sqlDataReader = command.ExecuteReader();
+					while(sqlDataReader.Read())
+					{
+						dataTable.Rows.Add(
+							sqlDataReader["TenantId"].ToString().Trim(),
+							sqlDataReader["UserId"].ToString().Trim(),
+							sqlDataReader["Role"].ToString().Trim());
+					}
+
+					return dataTable.CreateDataReader();
+				}
 			}
+
 		}
 
 		public void PurgeTenants(bool purgeDependencies)
@@ -756,6 +907,7 @@ CREATE TABLE [dbo].[TenantUsersProjects](
 			builder.Authentication = SqlAuthenticationMethod.SqlPassword;
 			builder.Encrypt = false;
 			builder.TrustServerCertificate = true;
+			builder.Pooling = false;
 
 			SqlConnection sqlConnection = new SqlConnection(builder.ConnectionString);
 			return sqlConnection;

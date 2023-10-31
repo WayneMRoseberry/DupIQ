@@ -46,6 +46,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public IssueReport GetIssueReport(string instanceId, TenantConfiguration tenantConfiguration, string projectId)
 		{
+			this._logger.LogInformation($"SqlIssueDbProvider.GetIssueReport: instanceId:{instanceId}, tenantId:{tenantConfiguration.TenantId}, projectId:{projectId}");
 			using (DbDataReader reader = sqlIOHelper.GetIssueReport(instanceId, tenantConfiguration, projectId))
 			{
 				if (reader.Read())
@@ -88,6 +89,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public IssueProfile GetIssueProfile(string issueId, TenantConfiguration tenantConfiguration, string projectId)
 		{
+			this._logger.LogInformation($"SqlIssueDbProvider.GetIssueProfile: issueId:{issueId}, tenantId:{tenantConfiguration.TenantId}, projectId:{projectId}");
 			using (var reader = sqlIOHelper.GetIssueProfile(issueId, tenantConfiguration, projectId))
 			{
 				if (reader.Read())

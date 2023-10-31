@@ -18,6 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="similarheadlines.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="testconfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

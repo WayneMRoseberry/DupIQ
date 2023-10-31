@@ -231,7 +231,8 @@ namespace DupIQ.IssueIdentity
 		#region private methods
 		private void PopulateIssueProfileDataFromExistingProfileOrCreateNewIfDataOutOfSync(IssueReport issueReport, IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId)
 		{
-			_logger.LogTrace(SharedEvents.IssueRepository_ReportExistingIssue, "Existing issue, IssueId={IssueId}", issueReport.IssueId);
+			_logger.LogInformation($"PopulateIssueProfileData. Existing issue, IssueId={issueProfile.IssueId}");
+			_logger.LogTrace(SharedEvents.IssueRepository_ReportExistingIssue, "PopulateIssueProfileData. Existing issue, IssueId={IssueId}", issueReport.IssueId);
 			try
 			{
 				IssueProfile temp = _dbProvider.GetIssueProfile(issueProfile.IssueId, tenantConfiguration, projectId);
