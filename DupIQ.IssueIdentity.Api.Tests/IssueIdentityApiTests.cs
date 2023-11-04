@@ -150,6 +150,50 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
+		public void POST_IssueProfiles_Related()
+		{
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
+
+			Console.WriteLine("First post an issue report.");
+			string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			HttpWebRequest request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+
+			var webResponse = request.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				issueId = JsonSerializer.Deserialize<IssueProfile>(response).issueId;
+				Assert.AreNotEqual(string.Empty, issueId, "Fail if the issueId is still empty.");
+			}
+
+			Console.WriteLine("Then search for related issue profiles from that same issue report.");
+
+			string requestUri = $"{UriBase}/IssueProfiles/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			request = CreatePostRequest(postBody, requestUri);
+
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<RelatedIssueProfile[]>(response);
+
+				Console.WriteLine(issueProfileResponse);
+
+				Assert.AreEqual(1, issueProfileResponse.Count(), "something to fail on.");
+				Assert.AreEqual(issueId, issueProfileResponse[0].issueId, "fail if the first issueId is not the same one we got back reporting the issue.");
+			}
+		}
+
+		[TestMethod]
 		public void ReportMultipleIssuesAndSeeIfVisibleViaOtherApis()
 		{
 			IssueReport issueReport = new IssueReport()
