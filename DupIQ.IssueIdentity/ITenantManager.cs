@@ -57,6 +57,8 @@
 
 		public UserTenantAuthorization GetUserTenantAuthorization(string tenantId, string userId);
 
+		public void PurgeTenants();
+
 		public void UpdateTenantConfiguration(TenantConfiguration tenantConfiguration);
 
 		public void UpdateTenantProfile(TenantProfile tenantProfile);

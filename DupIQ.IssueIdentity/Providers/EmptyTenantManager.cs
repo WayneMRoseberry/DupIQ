@@ -204,5 +204,10 @@
 		{
 			throw new NotImplementedException();
 		}
+
+		public void PurgeTenants()
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

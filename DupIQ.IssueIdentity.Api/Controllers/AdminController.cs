@@ -64,5 +64,11 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 
 			}
 		}
+
+		[HttpDelete("alltenants")]
+		public void PurgeTenants()
+		{
+			GlobalConfiguration.TenantManager.PurgeTenants();
+		}
 	}
 }

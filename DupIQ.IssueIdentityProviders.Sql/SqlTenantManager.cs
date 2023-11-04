@@ -249,11 +249,6 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			}
 		}
 
-		public void UpdateProject(string tenantId, Project project)
-		{
-			throw new NotImplementedException();
-		}
-
 		public T GetProjectExtendedProperties<T>(string projectId)
 		{
 			throw new NotImplementedException();
@@ -279,5 +274,14 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			}
 		}
 
+		public void PurgeTenants()
+		{
+			_databaseHelper.PurgeTenants(true);
+		}
+
+		public void UpdateProject(string tenantId, Project project)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
