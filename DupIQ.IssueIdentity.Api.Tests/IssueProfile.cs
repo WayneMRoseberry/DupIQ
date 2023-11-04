@@ -12,5 +12,6 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		public bool isNew { get; set; }
 		public DateTime firstReportedDate { get; set; }
 		public string exampleMessage { get; set; }
+		public string providerId { get; set; }
 	}
 }
