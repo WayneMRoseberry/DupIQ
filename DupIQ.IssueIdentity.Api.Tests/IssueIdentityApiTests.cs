@@ -60,6 +60,55 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
+		public void GET_IssueReport()
+		{
+			string testMessage = "somethingnew";
+
+			string issueReportGetRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={testMessage}";
+
+			Console.WriteLine("First report the issue.");
+			WebRequest webRequest = CreateGetRequest(issueReportGetRequestUri);
+			WebResponse webResponse = webRequest.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				issueId = issueProfileResponse.issueId;
+				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
+				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
+			}
+
+			string relatedIssueReportsGetRequestUri = $"{UriBase}/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
+			Console.WriteLine("Then get the related issue report id back from the issueId we got on the report.");
+			webRequest = CreateGetRequest(relatedIssueReportsGetRequestUri);
+			webResponse = webRequest.GetResponse();
+			string instanceId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var relatedIssueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
+				Assert.AreEqual(1, relatedIssueReportsResponse.Count(), "Fail if there is any other quantity than one IssueReport related to the issue profile.");
+				instanceId = relatedIssueReportsResponse[0].instanceId;
+			}
+
+			Console.WriteLine("Use the instanceId to retrieve the IssueReport.");
+			string issueReportsGetIssueReportRequestUri = $"{UriBase}/IssueReports/IssueReport?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&instanceId={instanceId}";
+			Console.WriteLine($"get issuereport uri: {issueReportsGetIssueReportRequestUri}");
+			webRequest = CreateGetRequest(issueReportsGetIssueReportRequestUri);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var returnedIssueReport = JsonSerializer.Deserialize<IssueReport>(response);
+				Assert.AreEqual(instanceId, returnedIssueReport.instanceId, "Fail if we did not get the IssueReport we were looking for.");
+			}
+		}
+
+		[TestMethod]
 		public void POST_IssueProfile()
 		{
 			Console.WriteLine("Get existing list of issue profiles.");
