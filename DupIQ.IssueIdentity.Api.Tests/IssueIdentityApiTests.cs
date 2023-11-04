@@ -194,6 +194,114 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
+		public void GET_IssueReports_Related_multiplereports()
+		{
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
+
+			Console.WriteLine("First post an issue report.");
+			string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			HttpWebRequest request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+
+			var webResponse = request.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				issueId = JsonSerializer.Deserialize<IssueProfile>(response).issueId;
+				Assert.AreNotEqual(string.Empty, issueId, "Fail if the issueId is still empty.");
+			}
+
+			Console.WriteLine("Post the IssueReport three more times.");
+			issueReport.instanceId = "instance2";
+			postBody = JsonSerializer.Serialize(issueReport);
+			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request.GetResponse();
+			issueReport.instanceId = "instance3";
+			postBody = JsonSerializer.Serialize(issueReport);
+			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request.GetResponse();
+			issueReport.instanceId = "instance4";
+			postBody = JsonSerializer.Serialize(issueReport);
+			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request.GetResponse();
+
+			Console.WriteLine("Then search for related issue profiles from that same issue report.");
+
+			string relatedIssueReportsGetUri = $"{UriBase}/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
+			request = CreateGetRequest(relatedIssueReportsGetUri);
+
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var issueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
+
+				Console.WriteLine(issueReportsResponse);
+
+				Assert.AreEqual(4, issueReportsResponse.Count(), "We reported four times, so fail if that is not how many reports we got back.");
+			}
+		}
+
+		[TestMethod]
+		public void GET_IssueReports_Related_reportsameinstanceidoverandover()
+		{
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
+
+			Console.WriteLine("First post an issue report.");
+			string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			HttpWebRequest request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+
+			var webResponse = request.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				issueId = JsonSerializer.Deserialize<IssueProfile>(response).issueId;
+				Assert.AreNotEqual(string.Empty, issueId, "Fail if the issueId is still empty.");
+			}
+
+			Console.WriteLine("Post the IssueReport three more times.");
+			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request.GetResponse();
+			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request.GetResponse();
+			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request.GetResponse();
+
+			Console.WriteLine("Then search for related issue profiles from that same issue report.");
+
+			string relatedIssueReportsGetUri = $"{UriBase}/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
+			request = CreateGetRequest(relatedIssueReportsGetUri);
+
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var issueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
+
+				Console.WriteLine(issueReportsResponse);
+
+				Assert.AreEqual(1, issueReportsResponse.Count(), "We reported four times, but instance id was the same, so fail if there is more than 1 report.");
+			}
+		}
+
+		[TestMethod]
 		public void ReportMultipleIssuesAndSeeIfVisibleViaOtherApis()
 		{
 			IssueReport issueReport = new IssueReport()
