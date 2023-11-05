@@ -29,14 +29,23 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		[TestCleanup]
 		public void Cleanup()
 		{
-			string deleteRequestUri = $"{UriBase}/Admin/allrecords?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string deleteAllRecordsRequestUri = $"{UriBase}/Admin/allrecords?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 
-			HttpWebRequest webRequest = CreateDeleteRequest(deleteRequestUri);
+			HttpWebRequest webRequest = CreateDeleteRequest(deleteAllRecordsRequestUri);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string responseBody = responseReader.ReadToEnd();
 				Console.WriteLine($"Response to delete all records: {responseBody}");
+			}
+			string deleteAllTenantsRequestUri = $"{UriBase}/Admin/alltenants";
+
+			webRequest = CreateDeleteRequest(deleteAllTenantsRequestUri);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+				Console.WriteLine($"Response to delete all tenants: {responseBody}");
 			}
 		}
 
