@@ -29,18 +29,18 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		[TestCleanup]
 		public void Cleanup()
 		{
-			string deleteAllRecordsRequestUri = $"{UriBase}/Admin/allrecords?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string deleteAllRecordsRequestUri = IssueIdentityApiTestsHelpers.BuildDeleteAllRecordsRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
 
-			HttpWebRequest webRequest = CreateDeleteRequest(deleteAllRecordsRequestUri);
+			HttpWebRequest webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllRecordsRequestUri);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string responseBody = responseReader.ReadToEnd();
 				Console.WriteLine($"Response to delete all records: {responseBody}");
 			}
-			string deleteAllTenantsRequestUri = $"{UriBase}/Admin/alltenants";
+			string deleteAllTenantsRequestUri = IssueIdentityApiTestsHelpers.BuildDeleteAllTenantsRequestUri(UriBase);
 
-			webRequest = CreateDeleteRequest(deleteAllTenantsRequestUri);
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllTenantsRequestUri);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -54,11 +54,11 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		{
 			string testMessage = "somethingnew";
 
-			string requestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={testMessage}";
+			string requestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, _sharedTenantId, _sharedProjectId);
 
-			WebRequest webRequest = CreateGetRequest(requestUri);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(requestUri);
 			WebResponse webResponse = webRequest.GetResponse();
-			using(var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
@@ -73,10 +73,10 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		{
 			string testMessage = "somethingnew";
 
-			string issueReportGetRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={testMessage}";
+			string issueReportGetRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, _sharedTenantId, _sharedProjectId);
 
 			Console.WriteLine("First report the issue.");
-			WebRequest webRequest = CreateGetRequest(issueReportGetRequestUri);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportGetRequestUri);
 			WebResponse webResponse = webRequest.GetResponse();
 			string issueId = string.Empty;
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -89,9 +89,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
 			}
 
-			string relatedIssueReportsGetRequestUri = $"{UriBase}/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
+			string relatedIssueReportsGetRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsGetRequestUri(issueId, UriBase, _sharedTenantId, _sharedProjectId);
 			Console.WriteLine("Then get the related issue report id back from the issueId we got on the report.");
-			webRequest = CreateGetRequest(relatedIssueReportsGetRequestUri);
+			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetRequestUri);
 			webResponse = webRequest.GetResponse();
 			string instanceId = string.Empty;
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -104,9 +104,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 
 			Console.WriteLine("Use the instanceId to retrieve the IssueReport.");
-			string issueReportsGetIssueReportRequestUri = $"{UriBase}/IssueReports/IssueReport?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&instanceId={instanceId}";
+			string issueReportsGetIssueReportRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportGetRequestUri(instanceId, UriBase, _sharedTenantId, _sharedProjectId);
 			Console.WriteLine($"get issuereport uri: {issueReportsGetIssueReportRequestUri}");
-			webRequest = CreateGetRequest(issueReportsGetIssueReportRequestUri);
+			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportsGetIssueReportRequestUri);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -123,7 +123,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine("Get existing list of issue profiles.");
 			string getIssueProfilesUri = $"{UriBase}/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 			IssueProfile[] existingIssueProfiles;
-			HttpWebRequest getIssueProfilesRequest = CreateGetRequest(getIssueProfilesUri);
+			HttpWebRequest getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri);
 			var webResponse = getIssueProfilesRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -146,14 +146,14 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string postBody = JsonSerializer.Serialize(issueProfile);
 
 			string postIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = CreatePostRequest(postBody, postIssueProfileUri);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueProfileUri);
 
 			webResponse = request.GetResponse();
 
 			Console.WriteLine("Check list of issue profiles after creating new issue profile.");
 
 			IssueProfile[] newIssueProfilesList;
-			getIssueProfilesRequest = CreateGetRequest(getIssueProfilesUri);
+			getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri);
 			webResponse = getIssueProfilesRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -167,7 +167,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine("Check if getting issue profile returns what we expected.");
 			var getIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?issueId={testIssueId}&tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 			Console.WriteLine($"uri={getIssueProfileUri}");
-			request = CreateGetRequest(getIssueProfileUri);
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfileUri);
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -184,9 +184,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		public void POST_IssueProfiles()
 		{
 			Console.WriteLine("Get existing list of issue profiles.");
-			string getIssueProfilesUri = $"{UriBase}/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string getIssueProfilesUri = IssueIdentityApiTestsHelpers.BuildIssueProfilesGetRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
 			IssueProfile[] existingIssueProfiles;
-			HttpWebRequest getIssueProfilesRequest = CreateGetRequest(getIssueProfilesUri);
+			HttpWebRequest getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri);
 			var webResponse = getIssueProfilesRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -197,8 +197,8 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 			Console.WriteLine("Create new issue profiles from array.");
 			string testIssueId = "testissueid";
-			IssueProfile[] issueProfiles = new IssueProfile[] 
-			{ 
+			IssueProfile[] issueProfiles = new IssueProfile[]
+			{
 				new IssueProfile()
 				{
 					exampleMessage = "test message",
@@ -214,20 +214,20 @@ namespace DupIQ.IssueIdentity.Api.Tests
 					firstReportedDate = DateTime.Now,
 					issueId = testIssueId+"2",
 					providerId = "test"
-				}           
-			} ;
+				}
+			};
 
 			string postBody = JsonSerializer.Serialize(issueProfiles);
 
-			string postIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = CreatePostRequest(postBody, postIssueProfileUri);
+			string postIssueProfileUri = IssueIdentityApiTestsHelpers.BuildIssueProfilesPostRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueProfileUri);
 
 			webResponse = request.GetResponse();
 
 			Console.WriteLine("Check list of issue profiles after creating new issue profile.");
 
 			IssueProfile[] newIssueProfilesList;
-			getIssueProfilesRequest = CreateGetRequest(getIssueProfilesUri);
+			getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri);
 			webResponse = getIssueProfilesRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -239,16 +239,16 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Assert.IsTrue(newIssueProfilesList.Count() > existingIssueProfiles.Count(), "Fail if there was not a new issueProfile added to the existing list of IssueProfiles.");
 
 			Console.WriteLine("Check if getting issue profile returns what we expected.");
-			var getIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?issueId={testIssueId+"1"}&tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			var getIssueProfileUri = IssueIdentityApiTestsHelpers.BuildIssueProfileGetRequestUri(UriBase, testIssueId + "1", _sharedTenantId, _sharedProjectId);
 			Console.WriteLine($"uri={getIssueProfileUri}");
-			request = CreateGetRequest(getIssueProfileUri);
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfileUri);
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
 				IssueProfile newProfile = JsonSerializer.Deserialize<IssueProfile>(response);
-				Assert.AreEqual(testIssueId+"1", newProfile.issueId, "fail if we did not get back the expected issue id from call to GET IssueProfile.");
+				Assert.AreEqual(testIssueId + "1", newProfile.issueId, "fail if we did not get back the expected issue id from call to GET IssueProfile.");
 				Assert.AreEqual("SqlIssueDbProvider", newProfile.providerId, "fail if the system did not override our non-existent provider with the default.");
 				Assert.IsFalse(newProfile.isNew, "fail if if isNew was not overridden and set to false.");
 			}
@@ -257,7 +257,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		[TestMethod]
 		public void POST_ReportIssues()
 		{
-			IssueReport[] issueReports = new IssueReport[] { 
+			IssueReport[] issueReports = new IssueReport[] {
 				new IssueReport()
 				{
 					instanceId = "testinstance1",
@@ -272,13 +272,16 @@ namespace DupIQ.IssueIdentity.Api.Tests
 					issueDate = DateTime.Now,
 					issueMessage = "this is a test"
 				}
-			} ;
+			};
 			string postBody = JsonSerializer.Serialize(issueReports);
 
-			string requestUri = $"{UriBase}/IssueReports/Reports?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string uriBase = UriBase;
+			string _sharedTenantId1 = _sharedTenantId;
+			string _sharedProjectId1 = _sharedProjectId;
+			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsPostRequestUri(uriBase, _sharedTenantId1, _sharedProjectId1);
 			Console.WriteLine("Create array of issueReports.");
 			Console.WriteLine($"POST to: {requestUri}");
-			HttpWebRequest request = CreatePostRequest(postBody, requestUri);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri);
 
 			var webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -306,8 +309,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string postBody = JsonSerializer.Serialize(issueReport);
 
 			Console.WriteLine("First post an issue report.");
-			string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+
+			string reportIssuePostRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssuePostRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 
 			var webResponse = request.GetResponse();
 			string issueId = string.Empty;
@@ -320,8 +324,8 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 			Console.WriteLine("Then search for related issue profiles from that same issue report.");
 
-			string requestUri = $"{UriBase}/IssueProfiles/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			request = CreatePostRequest(postBody, requestUri);
+			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueProfilesRelatedPostRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri);
 
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -350,8 +354,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string postBody = JsonSerializer.Serialize(issueReport);
 
 			Console.WriteLine("First post an issue report.");
-			string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+
+			string reportIssuePostRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssuePostRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 
 			var webResponse = request.GetResponse();
 			string issueId = string.Empty;
@@ -365,21 +370,21 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine("Post the IssueReport three more times.");
 			issueReport.instanceId = "instance2";
 			postBody = JsonSerializer.Serialize(issueReport);
-			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 			request.GetResponse();
 			issueReport.instanceId = "instance3";
 			postBody = JsonSerializer.Serialize(issueReport);
-			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 			request.GetResponse();
 			issueReport.instanceId = "instance4";
 			postBody = JsonSerializer.Serialize(issueReport);
-			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 			request.GetResponse();
 
 			Console.WriteLine("Then search for related issue profiles from that same issue report.");
 
-			string relatedIssueReportsGetUri = $"{UriBase}/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
-			request = CreateGetRequest(relatedIssueReportsGetUri);
+			string relatedIssueReportsGetUri = IssueIdentityApiTestsHelpers.BuildIssueProfileRelatedGetRequestUri(issueId, UriBase, _sharedTenantId, _sharedProjectId);
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetUri);
 
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -408,7 +413,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 			Console.WriteLine("First post an issue report.");
 			string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 
 			var webResponse = request.GetResponse();
 			string issueId = string.Empty;
@@ -420,17 +425,17 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 
 			Console.WriteLine("Post the IssueReport three more times.");
-			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 			request.GetResponse();
-			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 			request.GetResponse();
-			request = CreatePostRequest(postBody, reportIssuePostRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri);
 			request.GetResponse();
 
 			Console.WriteLine("Then search for related issue profiles from that same issue report.");
 
 			string relatedIssueReportsGetUri = $"{UriBase}/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
-			request = CreateGetRequest(relatedIssueReportsGetUri);
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetUri);
 
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -458,7 +463,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string postBody = JsonSerializer.Serialize(issueReport);
 
 			string postIssueReportRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = CreatePostRequest(postBody, postIssueReportRequestUri);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueReportRequestUri);
 
 			var webResponse = request.GetResponse();
 			string issueId = string.Empty;
@@ -475,7 +480,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 			issueReport.instanceId = "testinstance2";
 			postBody = JsonSerializer.Serialize(issueReport);
-			request = CreatePostRequest(postBody, postIssueReportRequestUri);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueReportRequestUri);
 
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -489,7 +494,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 
 			string getIssueReportsRelatedToIssueIdUri = UriBase + $"/IssueReports/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&issueId={issueId}";
-			request = CreateGetRequest(getIssueReportsRelatedToIssueIdUri);
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueReportsRelatedToIssueIdUri);
 			webResponse = request.GetResponse();
 			using(var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -514,7 +519,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				System.Console.WriteLine($" - posting line {lineCounter}.");
 				lineCounter++;
 				string reportIssuePostRequestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={Uri.EscapeDataString(line)}";
-				HttpWebRequest req = CreateGetRequest(reportIssuePostRequestUri);
+				HttpWebRequest req = IssueIdentityApiTestsHelpers.CreateGetRequest(reportIssuePostRequestUri);
 				var resp = req.GetResponse();
 				using(var responseReader = new StreamReader(resp.GetResponseStream()))
 				{
@@ -530,7 +535,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			System.Console.WriteLine($"headlines={contentHeadlines.Count()}, issueprofiles={issueProfileCounts.Count}");
 
 			string findRelatedIssuesUri = $"{UriBase}/IssueProfiles/Related?tenantId={_sharedTenantId}&projectId={_sharedProjectId}&message={Uri.EscapeUriString(contentHeadlines[0])}";
-			WebRequest webRequest = CreateGetRequest(findRelatedIssuesUri);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(findRelatedIssuesUri);
 			var response = webRequest.GetResponse();
 			int relatedProfilesCount = 0;
 			using(var responseReader = new StreamReader(response.GetResponseStream()))
@@ -544,41 +549,6 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			double ratio = ((double)issueProfileCounts.Count) / ((double)contentHeadlines.Count());
 			Assert.IsTrue(ratio > 0.1, "Fail if the content provided did not yield more than a 0.1 ratio of issues to issue reports.");
 			Assert.IsTrue(relatedProfilesCount > 1, "Fail if there is not more than 1 related issue profile returned.");
-		}
-
-		private HttpWebRequest CreateDeleteRequest(string requestUri)
-		{
-			var request = (HttpWebRequest)WebRequest.Create(requestUri);
-			request.Method = "DELETE";
-			request.ContentType = "application/json";
-			request.Headers.Add("Access-Control-Allow-Origin", "*");
-
-			return request;
-		}
-
-		private HttpWebRequest CreateGetRequest(string requestUri)
-		{
-			var request = (HttpWebRequest)WebRequest.Create(requestUri);
-			request.Method = "GET";
-			request.ContentType = "application/json";
-			request.Headers.Add("Access-Control-Allow-Origin", "*");
-
-			return request;
-		}
-
-		private HttpWebRequest CreatePostRequest(string postBody, string requestUri)
-		{
-			var request = (HttpWebRequest)WebRequest.Create(requestUri);
-			request.Method = "POST";
-			request.ContentType = "application/json";
-			request.Headers.Add("Access-Control-Allow-Origin", "*");
-			Console.WriteLine("writing to request stream");
-			using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
-			{
-				writer.Write(postBody);
-			}
-
-			return request;
 		}
 
 		private void CreateSharedProject()
@@ -597,7 +567,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine($" addProjectUriBase:{addProjectUriBase}");
 			Console.WriteLine($" serializedProjectJson:{serializedProjectJson}");
 
-			WebRequest webRequest = CreatePostRequest(serializedProjectJson, addProjectUriBase);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(serializedProjectJson, addProjectUriBase);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
@@ -612,7 +582,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string AddTenantURITemplate = $"{UriBase}/Tenant/Tenant?tenantName={_tenantName}&ownerId={_ownerId}&ownerEmail={_ownerEmail}&ownerName={_ownerName}";
 			Console.WriteLine($"Create tenant Uri:{AddTenantURITemplate}");
 
-			WebRequest webRequest = CreatePostRequest(string.Empty, AddTenantURITemplate);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, AddTenantURITemplate);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
