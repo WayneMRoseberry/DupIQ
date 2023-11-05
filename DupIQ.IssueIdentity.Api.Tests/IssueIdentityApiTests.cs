@@ -181,6 +181,80 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
+		public void POST_IssueProfiles()
+		{
+			Console.WriteLine("Get existing list of issue profiles.");
+			string getIssueProfilesUri = $"{UriBase}/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			IssueProfile[] existingIssueProfiles;
+			HttpWebRequest getIssueProfilesRequest = CreateGetRequest(getIssueProfilesUri);
+			var webResponse = getIssueProfilesRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				existingIssueProfiles = JsonSerializer.Deserialize<IssueProfile[]>(response);
+			}
+
+			Console.WriteLine("Create new issue profiles from array.");
+			string testIssueId = "testissueid";
+			IssueProfile[] issueProfiles = new IssueProfile[] 
+			{ 
+				new IssueProfile()
+				{
+					exampleMessage = "test message",
+					isNew = true,
+					firstReportedDate = DateTime.Now,
+					issueId = testIssueId+"1",
+					providerId = "test"
+				},
+				new IssueProfile()
+				{
+					exampleMessage = "test message",
+					isNew = true,
+					firstReportedDate = DateTime.Now,
+					issueId = testIssueId+"2",
+					providerId = "test"
+				}           
+			} ;
+
+			string postBody = JsonSerializer.Serialize(issueProfiles);
+
+			string postIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			HttpWebRequest request = CreatePostRequest(postBody, postIssueProfileUri);
+
+			webResponse = request.GetResponse();
+
+			Console.WriteLine("Check list of issue profiles after creating new issue profile.");
+
+			IssueProfile[] newIssueProfilesList;
+			getIssueProfilesRequest = CreateGetRequest(getIssueProfilesUri);
+			webResponse = getIssueProfilesRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine($"GET issue profiles response={response}");
+				newIssueProfilesList = JsonSerializer.Deserialize<IssueProfile[]>(response);
+			}
+
+			Assert.IsTrue(newIssueProfilesList.Count() > existingIssueProfiles.Count(), "Fail if there was not a new issueProfile added to the existing list of IssueProfiles.");
+
+			Console.WriteLine("Check if getting issue profile returns what we expected.");
+			var getIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?issueId={testIssueId+"1"}&tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			Console.WriteLine($"uri={getIssueProfileUri}");
+			request = CreateGetRequest(getIssueProfileUri);
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile newProfile = JsonSerializer.Deserialize<IssueProfile>(response);
+				Assert.AreEqual(testIssueId+"1", newProfile.issueId, "fail if we did not get back the expected issue id from call to GET IssueProfile.");
+				Assert.AreEqual("SqlIssueDbProvider", newProfile.providerId, "fail if the system did not override our non-existent provider with the default.");
+				Assert.IsFalse(newProfile.isNew, "fail if if isNew was not overridden and set to false.");
+			}
+		}
+
+		[TestMethod]
 		public void POST_ReportIssues()
 		{
 			IssueReport[] issueReports = new IssueReport[] { 
