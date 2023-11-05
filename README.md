@@ -24,6 +24,11 @@ and tenants.
 
 Security and authorization features are not implemented yet.
 
+IssueIdentity.ConfigureServices
+---------------
+A command line executable that configures the database server tables
+and stored procedures.
+
 Extensions
 ===============
 IssueIdentity.Providers.Sql
