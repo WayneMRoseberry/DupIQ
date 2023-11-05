@@ -181,18 +181,29 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
-		public void POST_ReportIssue()
+		public void POST_ReportIssues()
 		{
-			IssueReport issueReport = new IssueReport()
-			{
-				instanceId = "testinstance",
-				issueId = "changes",
-				issueDate = DateTime.Now,
-				issueMessage = "this is a test"
-			};
-			string postBody = JsonSerializer.Serialize(issueReport);
+			IssueReport[] issueReports = new IssueReport[] { 
+				new IssueReport()
+				{
+					instanceId = "testinstance1",
+					issueId = "changes",
+					issueDate = DateTime.Now,
+					issueMessage = "this is a test"
+				},
+				new IssueReport()
+				{
+					instanceId = "testinstance2",
+					issueId = "changes",
+					issueDate = DateTime.Now,
+					issueMessage = "this is a test"
+				}
+			} ;
+			string postBody = JsonSerializer.Serialize(issueReports);
 
-			string requestUri = $"{UriBase}/IssueReports/Report?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			string requestUri = $"{UriBase}/IssueReports/Reports?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
+			Console.WriteLine("Create array of issueReports.");
+			Console.WriteLine($"POST to: {requestUri}");
 			HttpWebRequest request = CreatePostRequest(postBody, requestUri);
 
 			var webResponse = request.GetResponse();
@@ -200,10 +211,11 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			{
 				string response = responseReader.ReadToEnd();
 				Console.WriteLine(response);
-				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile[]>(response);
 
-				Assert.AreEqual("this is a test", issueProfileResponse.exampleMessage, "Fail if the example message does not match issue entered.");
-				Assert.IsTrue(issueProfileResponse.isNew, "Fail if the issue is not reported as new.");
+				Assert.AreEqual(2, issueProfileResponse.Count(), "Fail if we don't get two profiles returned.");
+				Assert.AreEqual(issueProfileResponse[0].issueId, issueProfileResponse[1].issueId, "Fail if both issue profiles do not have the same issueId.");
+				Assert.AreNotEqual(issueProfileResponse[0].isNew, issueProfileResponse[1].isNew, "Fail if both issue profiles have the same isNew value.");
 			}
 		}
 
