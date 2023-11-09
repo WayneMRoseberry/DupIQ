@@ -29,8 +29,9 @@
 		/// </summary>
 		/// <param name="issueMessage">The message to find matches for.</param>
 		/// <param name="count">Maximum number of related profiles to return.</param>
+		/// <param name="page">Allows for paging through results, returns empty results if nothing is in specified page</param>
 		/// <returns></returns>
-		RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId);
+		RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page=0);
 
 		/// <summary>
 		/// Add the issue profile to the list of prior.

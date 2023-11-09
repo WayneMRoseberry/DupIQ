@@ -39,7 +39,7 @@
 			return overrideGetIssueProfileTenantProject(id, tenantConfiguration, projectId);
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			return overrideGetRelatedIssueProfilesTenantConfigProjId(issueMessage, count, tenantConfiguration, projectId);
 		}

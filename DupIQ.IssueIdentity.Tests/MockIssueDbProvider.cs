@@ -87,29 +87,9 @@
 			return overrideGetIssueProfileTenantConfigProjId(issueId, tenantConfiguration, projectId);
 		}
 
-		public IssueProfile[] GetIssueProfiles()
-		{
-			return overrideGetIssueProfiles();
-		}
-
-		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration)
-		{
-			return overrideGetIssueProfilesTenantConfiguration(tenantConfiguration);
-		}
-
-		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId)
+		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			return overrideGetIssueProfilesTenantConfigurationProjId(tenantConfiguration, projectId);
-		}
-
-		public IssueReport GetIssueReport(string instanceId)
-		{
-			return overrideGetIssueReport(instanceId);
-		}
-
-		public IssueReport GetIssueReport(string instanceId, TenantConfiguration tenantConfiguration)
-		{
-			return overrideGetIssueReportTenantConfiguration(instanceId, tenantConfiguration);
 		}
 
 		public IssueReport GetIssueReport(string instanceId, TenantConfiguration tenantConfiguration, string projectId)
@@ -117,17 +97,7 @@
 			return overrideGetIssueReportTenantConfigProjId(instanceId, tenantConfiguration, projectId);
 		}
 
-		public IssueReport[] GetIssueReports(IssueProfile issueProfile)
-		{
-			return overrideGetIssueReports(issueProfile);
-		}
-
-		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration)
-		{
-			return overrideGetIssueReportsTenantConfiguration(issueProfile, tenantConfiguration);
-		}
-
-		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId)
+		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId, int page=0)
 		{
 			return overrideGetIssueReportsTenantConfigurationProjId(issueProfile, tenantConfiguration, projectId);
 		}

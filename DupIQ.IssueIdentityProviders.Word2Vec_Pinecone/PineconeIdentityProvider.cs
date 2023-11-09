@@ -67,7 +67,7 @@ namespace DupIQ.IssueIdentityProviders.Word2Vec_Pinecone
 			return new IssueProfile() { IssueId = embeddings.Id, IsNew = false, ProviderId = ID() };
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			List<RelatedIssueProfile> relatedIssueProfiles = new List<RelatedIssueProfile>();
 			// first get vector based on message

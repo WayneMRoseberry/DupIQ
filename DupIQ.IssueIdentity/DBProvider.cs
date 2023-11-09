@@ -94,12 +94,7 @@ namespace DupIQ.IssueIdentity
 			}
 		}
 
-		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration)
-		{
-			return this.GetIssueProfiles(tenantConfiguration, string.Empty);
-		}
-
-		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId)
+		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId, int page=0)
 		{
 			List<IssueProfile> result = new List<IssueProfile>();
 			using (DbDataReader reader = dbIOHelper.GetIssueProfiles(tenantConfiguration, projectId))
@@ -117,11 +112,6 @@ namespace DupIQ.IssueIdentity
 				}
 			}
 			return result.ToArray<IssueProfile>();
-		}
-
-		public IssueReport GetIssueReport(string instanceId, TenantConfiguration tenantConfiguration)
-		{
-			return this.GetIssueReport(instanceId, tenantConfiguration, string.Empty);
 		}
 
 		public IssueReport GetIssueReport(string instanceId, TenantConfiguration tenantConfiguration, string projectId)
@@ -146,12 +136,7 @@ namespace DupIQ.IssueIdentity
 			}
 		}
 
-		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration)
-		{
-			return this.GetIssueReports(issueProfile, tenantConfiguration, string.Empty);
-		}
-
-		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId)
+		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId, int page=0)
 		{
 			List<IssueReport> result = new List<IssueReport>();
 			using (DbDataReader reader = dbIOHelper.GetIssueReports(issueProfile, tenantConfiguration, projectId))
@@ -171,16 +156,7 @@ namespace DupIQ.IssueIdentity
 			return result.ToArray<IssueReport>();
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count)
-		{
-			throw new NotImplementedException();
-		}
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration)
-		{
-			throw new NotImplementedException();
-		}
-
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			throw new NotImplementedException();
 		}

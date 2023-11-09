@@ -1,4 +1,5 @@
-﻿using DupIQ.IssueIdentity;
+﻿using Azure;
+using DupIQ.IssueIdentity;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
 
@@ -67,7 +68,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			}
 		}
 
-		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId)
+		public IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId, int page=0)
 		{
 			List<IssueReport> result = new List<IssueReport>();
 			using (DbDataReader reader = sqlIOHelper.GetIssueReports(issueProfile, tenantConfiguration, projectId))
@@ -110,7 +111,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			}
 		}
 
-		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId)
+		public IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			List<IssueProfile> result = new List<IssueProfile>();
 			using (DbDataReader reader = sqlIOHelper.GetIssueProfiles(tenantConfiguration, projectId))
@@ -155,7 +156,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			return GetType().Name;
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			throw new NotImplementedException();
 		}

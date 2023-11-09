@@ -123,7 +123,7 @@ namespace DupIQ.IssueIdentity.Providers
 			throw new NotImplementedException();
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			throw new NotImplementedException();
 		}

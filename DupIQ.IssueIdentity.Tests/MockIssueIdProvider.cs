@@ -54,17 +54,7 @@
 			return overrideGetIssueProfileTenantProject(id, tenantConfiguration, projectId);
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count)
-		{
-			return overrideGetRelatedProfiles(issueMessage, count);
-		}
-
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration)
-		{
-			return overrideGetRelatedProfilesTenantConfig(issueMessage, count, tenantConfiguration);
-		}
-
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			return overrideGetRelatedProfilesTenantConfigProjId(issueMessage, count, tenantConfiguration, projectId);
 		}

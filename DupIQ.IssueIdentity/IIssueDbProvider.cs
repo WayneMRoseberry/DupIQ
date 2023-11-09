@@ -32,8 +32,9 @@
 		/// Returns issue reports from issue database which match the issue profile specified.
 		/// </summary>
 		/// <param name="issueProfile">Issue profile to match for.</param>
+		/// <param name="page">Allows for paging through results, returns empty results if nothing is in specified page</param>
 		/// <returns>Array of IssueReports where IssueId matches id on specified IssueProfile.</returns>
-		IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId);
+		IssueReport[] GetIssueReports(IssueProfile issueProfile, TenantConfiguration tenantConfiguration, string projectId, int page=0);
 		/// <summary>
 		/// Returns specified issue profile.
 		/// </summary>
@@ -43,8 +44,9 @@
 		/// <summary>
 		/// Returns all the issue profiles in the issue database.
 		/// </summary>
+		/// <param name="page">Allows for paging through results, returns empty results if nothing is in specified page</param>
 		/// <returns>Array of IssueProfile objects.</returns>
-		IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId);
+		IssueProfile[] GetIssueProfiles(TenantConfiguration tenantConfiguration, string projectId, int page=0);
 		/// <summary>
 		/// Finds specified issue report and changes its issue id to match value provided.
 		/// </summary>
