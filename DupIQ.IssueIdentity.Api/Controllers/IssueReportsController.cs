@@ -28,12 +28,12 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		/// <returns>Array of IssueReport objects.</returns>
 		// GET: api/<IssueReportsController>
 		[HttpGet("Related")]
-		public IEnumerable<IssueReport> GetForTenant(string issueid, string tenantId, string projectId)
+		public IEnumerable<IssueReport> GetForTenant(string issueid, string tenantId, string projectId, int page = 0)
 		{
 			logger.LogInformation("GetIssueReports. issueId:{issueid}, tenantId:{tenantId}", issueid, tenantId);
 			if (DoesApiKeyMatchForTenant(tenantId))
 			{
-				return GlobalConfiguration.Repository.GetIssueReportsFromProject(new IssueProfile() { IssueId = issueid }, tenantId, projectId);
+				return GlobalConfiguration.Repository.GetIssueReportsFromProject(new IssueProfile() { IssueId = issueid }, tenantId, projectId, page);
 			}
 			return null;
 		}

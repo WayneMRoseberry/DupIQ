@@ -32,12 +32,12 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		/// <returns>An array of IssueProfile objects.</returns>
 		// GET: api/<IssueProfilesController>
 		[Microsoft.AspNetCore.Mvc.HttpGet]
-		public IEnumerable<IssueProfile> GetForTenantId(string tenantId, string projectId)
+		public IEnumerable<IssueProfile> GetForTenantId(string tenantId, string projectId, int page=0)
 		{
 			logger.LogInformation("GetIssueProfiles. tenantId:{tenantId}", tenantId);
 			if (DoesApiKeyMatchForTenant(tenantId))
 			{
-				return GlobalConfiguration.Repository.GetIssueProfiles(tenantId, projectId);
+				return GlobalConfiguration.Repository.GetIssueProfiles(tenantId, projectId, page);
 			}
 			return null;
 		}
@@ -103,13 +103,13 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		/// <returns>An array of RelatedIssueProfile objects, which inherit from IssueProfile, but have a Similarity field indicating how similar they are to the specified message. The array is sorted in descending order, larger numbers being the most similar.</returns>
 		// GET api/<IssueProfilesController>/5
 		[Microsoft.AspNetCore.Mvc.HttpGet("Related")]
-		public IEnumerable<RelatedIssueProfile> GetRelatedForTenant(string message, string tenantId, string projectId)
+		public IEnumerable<RelatedIssueProfile> GetRelatedForTenant(string message, string tenantId, string projectId, int page=0)
 		{
 			logger.LogInformation("GetReltedIssueProfiles. tenantId:{tenantId}", tenantId);
 			if (DoesApiKeyMatchForTenant(tenantId))
 			{
 				IssueReport issueReport = new IssueReport() { IssueMessage = message };
-				return GlobalConfiguration.Repository.GetRelatedIssueProfiles(issueReport, 10, tenantId, projectId);
+				return GlobalConfiguration.Repository.GetRelatedIssueProfiles(issueReport, 10, tenantId, projectId,page);
 			}
 			return null;
 		}
