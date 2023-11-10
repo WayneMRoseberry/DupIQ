@@ -20,10 +20,7 @@ namespace DupIQ.IssueIdentityAPI
 		{
 			IssueIdentityAPIConfig issueIdentityAPIConfig = new IssueIdentityAPIConfig()
 			{
-				issueidentitydbserver = configuration.GetConnectionString("issueidentitydbserver"),
 				pineconeconfigjson = configuration.GetConnectionString("pineconeconfigjson"),
-				issueidentityprofiletable = configuration["profiletable"],
-				issueidentityreporttable = configuration["reporttable"]
 			};
 
 			SqlIOHelperConfig sqlConfig = new SqlIOHelperConfig()
@@ -41,7 +38,6 @@ namespace DupIQ.IssueIdentityAPI
 		{
 			if (Repository == null)
 			{
-
 				SqlTenantDatabaseHelper sqlTenantDatabaseHelper = new SqlTenantDatabaseHelper(sqlConfig);
 				TenantManager = new SqlTenantManager(sqlTenantDatabaseHelper);
 
@@ -51,20 +47,13 @@ namespace DupIQ.IssueIdentityAPI
 				SqlUserDbHelper sqlUserDbHelper = new SqlUserDbHelper(sqlConfig);
 				UserManager = new SqlIssueIdentityUserManager(sqlUserDbHelper);			
 
-				//AzureTableConfiguration azureTableConfiguration = new AzureTableConfiguration()
-				//{
-				//	ConnectionString = config.issueidentitydbserver
-				//};
-				//dbIOHelper = new AzureTableIOHelper(azureTableConfiguration);
-				//TenantManager = new AzureTenantManager(new AzureTableIOHelper(azureTableConfiguration));
-				//taggedIssueProvider = new TaggedIssueProvider(new AzureTableIOHelper(azureTableConfiguration), logger);
+
 				taggedIssueProvider = new TaggedIssueProvider(dbIOHelper, logger);
 
 				word2Vec_Pinecone_VectorHelper = new Word2Vec_Pinecone_VectorHelper(config.pineconeconfigjson, logger);
 				PineconeIdentityProvider pineconeIdentityProvider = new PineconeIdentityProvider(word2Vec_Pinecone_VectorHelper, logger);
 				IssueIdentityManager issueIdentityManager = new IssueIdentityManager(new IIssueIdentityProvider[] { taggedIssueProvider, pineconeIdentityProvider }, TenantManager, logger, pineconeIdentityProvider.GetType().Name);
 
-				//DBProvider dBProvider = new DBProvider(dbIOHelper, logger);
 				Repository = new IssueRepository(sqlDb, issueIdentityManager, logger, TenantManager);
 			}
 		}

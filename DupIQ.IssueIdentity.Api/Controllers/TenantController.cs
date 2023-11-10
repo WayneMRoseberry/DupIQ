@@ -81,5 +81,11 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return null;
 		}
 
+		[HttpGet]
+		public string[] GetTenants()
+		{
+			return GlobalConfiguration.TenantManager.GetTenants();
+		}
+
 	}
 }

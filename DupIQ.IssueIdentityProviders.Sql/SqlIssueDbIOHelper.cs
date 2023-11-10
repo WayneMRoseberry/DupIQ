@@ -534,11 +534,9 @@ CREATE TABLE [dbo].[IssueProfiles](
 
 	public class SqlIOHelperConfig
 	{
-		public string ConnectionString { get; set; }
 		public string ServerName { get; set; }
 		public string DatabaseName { get; set; }
 		public string AccountName { get; set; }
 		public string Password { get; set; }
-
 	}
 }
