@@ -144,17 +144,17 @@ namespace DupIQ.IssueIdentity
 		/// <param name="count">Maximum number of related issue profiles to return.</param>
 		/// <returns>List of related issue profiles.</returns>
 		/// <exception cref="UnableToMatchIssueException">Thrown if none of the providers are able to match the issue.</exception>
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, int page=0)
 		{
 			string projectId = string.Empty;
-			return GetRelatedIssueProfiles(issueMessage, count, tenantConfiguration, projectId);
+			return GetRelatedIssueProfiles(issueMessage, count, tenantConfiguration, projectId, page);
 		}
 
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(string issueMessage, int count, TenantConfiguration tenantConfiguration, string projectId, int page = 0)
 		{
 			IIssueIdentityProvider provider = FindProviderThatCanHandleMessage(issueMessage);
 			_logger.LogTrace(SharedEvents.IssueIdentityManager_GetRelatedIssueProfiles, "GetRelatedIssueProfiles on Tenant {TenantId} with {Provider} for message='{Message}'", tenantConfiguration.TenantId, provider.GetType().Name, issueMessage);
-			return provider.GetRelatedIssueProfiles(issueMessage, count, tenantConfiguration, projectId);
+			return provider.GetRelatedIssueProfiles(issueMessage, count, tenantConfiguration, projectId, page);
 		}
 
 		private IIssueIdentityProvider FindProviderThatCanHandleMessage(string issueMessage)

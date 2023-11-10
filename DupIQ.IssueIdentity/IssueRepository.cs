@@ -121,11 +121,11 @@ namespace DupIQ.IssueIdentity
 		/// <param name="issueProfile">IssueProfile to match for where its Id field corresponds to IssueId on issue reports.</param>
 		/// <returns>Array of matching IssueReport objects.</returns>
 
-		public IssueReport[] GetIssueReportsFromProject(IssueProfile issueProfile, string tenantId, string projectId)
+		public IssueReport[] GetIssueReportsFromProject(IssueProfile issueProfile, string tenantId, string projectId, int page=0)
 		{
 			_logger.LogTrace(SharedEvents.IssueRepository_GetIssueReports, "Get Issue Reports, IssueId={IssueId}, TenantId={TenantId}", issueProfile.IssueId, tenantId);
 			TenantConfiguration tenantConfiguration = _tenantManager.GetTenantConfiguration(tenantId);
-			return _dbProvider.GetIssueReports(issueProfile, tenantConfiguration, projectId);
+			return _dbProvider.GetIssueReports(issueProfile, tenantConfiguration, projectId, page);
 		}
 
 		/// <summary>
@@ -204,11 +204,11 @@ namespace DupIQ.IssueIdentity
 		/// Returns all issue profiles in the issue database.
 		/// </summary>
 		/// <returns>Array of IssueProfile objects.</returns>
-		public IssueProfile[] GetIssueProfiles(string tenantId, string projectId)
+		public IssueProfile[] GetIssueProfiles(string tenantId, string projectId, int page=0)
 		{
 			_logger.LogTrace(SharedEvents.IssueRepository_GetIssueProfiles, "Get issue profiles. TenantId={TenantId}", tenantId);
 			TenantConfiguration tenantConfiguration = _tenantManager.GetTenantConfiguration(tenantId);
-			return _dbProvider.GetIssueProfiles(tenantConfiguration, projectId);
+			return _dbProvider.GetIssueProfiles(tenantConfiguration, projectId, page);
 		}
 
 		/// <summary>
@@ -217,11 +217,11 @@ namespace DupIQ.IssueIdentity
 		/// <param name="issueReport">Issue to get related issues for.</param>
 		/// <param name="count">Maximum number of issue profiles to return.</param>
 		/// <returns>List of related issue profiles.</returns>
-		public RelatedIssueProfile[] GetRelatedIssueProfiles(IssueReport issueReport, int count, string tenantId, string projectId)
+		public RelatedIssueProfile[] GetRelatedIssueProfiles(IssueReport issueReport, int count, string tenantId, string projectId, int page=0)
 		{
 			TenantConfiguration tenantConfiguration = _tenantManager.GetTenantConfiguration(tenantId);
 			_logger.LogTrace(SharedEvents.IssueRepository_GetRelatedIssueProfiles, "Get related issue profiles, InstanceId={InstanceId}, MaxCount={MaxCount}, TenantId={TenantId}", issueReport.InstanceId, count, tenantId);
-			RelatedIssueProfile[] relatedIssueProfiles = _identityManager.GetRelatedIssueProfiles(issueReport.IssueMessage, count, tenantConfiguration, projectId);
+			RelatedIssueProfile[] relatedIssueProfiles = _identityManager.GetRelatedIssueProfiles(issueReport.IssueMessage, count, tenantConfiguration, projectId, page);
 
 			AddAnyFieldsThatMightHaveBeenMissingInTheRelatedProfileLookup(relatedIssueProfiles, tenantConfiguration, projectId);
 			return relatedIssueProfiles;
