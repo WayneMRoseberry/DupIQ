@@ -2,6 +2,8 @@ using DupIQ.IssueIdentity;
 using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddAuthorization();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -44,6 +46,8 @@ app.UseExceptionHandler(exceptionHanderApp =>
 
 app.MapControllers();
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Logger.LogInformation("Starting app.");
 
