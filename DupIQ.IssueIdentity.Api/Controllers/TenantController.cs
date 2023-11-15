@@ -1,11 +1,12 @@
 ﻿using DupIQ.IssueIdentity;
 using Microsoft.AspNetCore.Mvc;
+using System.Web.Http;
 
 namespace DupIQ.IssueIdentityAPI.Controllers
 {
+	[Microsoft.AspNetCore.Authorization.Authorize]
 	[Microsoft.AspNetCore.Mvc.Route("[controller]")]
 	[ApiController]
-	//[ApiKey]
 	public class TenantController : IssueIdentityControllerBaseClass
 	{
 		ILogger<TenantController> logger;
@@ -18,13 +19,13 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			GlobalConfiguration.InitializeConfiguration(_configuration, logger);
 		}
 
-		[HttpPost("Project")]
+		[Microsoft.AspNetCore.Mvc.HttpPost("Project")]
 		public void AddProject(string tenantId, Project project)
 		{
 			GlobalConfiguration.TenantManager.AddProject(tenantId, project);
 		}
 
-		[HttpGet("Projects")]
+		[Microsoft.AspNetCore.Mvc.HttpGet("Projects")]
 		public IEnumerable<Project> GetProjects(string tenantId)
 		{
 			if(DoesApiKeyMatchForTenant(tenantId))
@@ -35,7 +36,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return null;
 		}
 
-		[HttpGet("ProjectsForUser")]
+		[Microsoft.AspNetCore.Mvc.HttpGet("ProjectsForUser")]
 		public IEnumerable<Project> GetProjectsForUser(string tenantId, string userId)
 		{
 			if (DoesApiKeyMatchForTenant(tenantId))
@@ -46,7 +47,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return null;
 		}
 
-		[HttpGet("Project")]
+		[Microsoft.AspNetCore.Mvc.HttpGet("Project")]
 		public Project GetProject(string tenantId, string projectId)
 		{
 			if (DoesApiKeyMatchForTenant(tenantId))
@@ -57,7 +58,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return null;
 		}
 
-		[HttpPost("Tenant")]
+		[Microsoft.AspNetCore.Mvc.HttpPost("Tenant")]
 		public string AddTenant(string tenantName, string ownerId, string ownerEmail, string ownerName)
 		{
 			string tenantId = System.Guid.NewGuid().ToString();
@@ -71,7 +72,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return GlobalConfiguration.TenantManager.AddTenant(tenantProfile);
 		}
 
-		[HttpGet("Tenant")]
+		[Microsoft.AspNetCore.Mvc.HttpGet("Tenant")]
 		public TenantProfile GetTenant(string tenantId)
 		{
 			if (DoesApiKeyMatchForTenant(tenantId))
@@ -81,7 +82,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return null;
 		}
 
-		[HttpGet]
+		[Microsoft.AspNetCore.Mvc.HttpGet]
 		public string[] GetTenants()
 		{
 			return GlobalConfiguration.TenantManager.GetTenants();
