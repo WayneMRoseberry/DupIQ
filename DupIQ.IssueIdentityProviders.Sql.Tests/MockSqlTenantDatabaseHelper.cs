@@ -11,6 +11,7 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		public Action<string, string, string> overrideAddProjectForUser = (t, u, p) => { throw new NotImplementedException(); };
 		public Action<TenantProfile> overrideAddOrUpdateTenantProfile = (t) => { throw new NotImplementedException(); };
 		public Action<string, string, string, string, UserTenantAuthorization> overrideAddOrUpdateTenantProfileToUserProfileList = (t, u, n, e, a) => { throw new NotImplementedException(); };
+		public Action<string, UserServiceAuthorization> overrideAddOrUpdateUserServiceAuthorization = (s, u) => { throw new NotImplementedException(); };
 		public Action<string, string, UserTenantAuthorization> overrideAddOrUpdateUserTenantAuthorization = (t, u, a) => { throw new NotImplementedException(); };
 		public Action<string> overrideDeleteTenantProfile = (t) => { throw new NotImplementedException(); };
 		public Func<string, string, Project> overrideGetProject = (p, t) => { throw new NotImplementedException(); };
@@ -68,6 +69,11 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		public void AddOrUpdateTenantProfileToUserProfileList(string tenantId, string userId, string userName, string email, UserTenantAuthorization auth)
 		{
 			overrideAddOrUpdateTenantProfileToUserProfileList(tenantId, userId, userName, email, auth);
+		}
+
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization authorization)
+		{
+			overrideAddOrUpdateUserServiceAuthorization(userId, authorization);
 		}
 
 		public void AddOrUpdateUserTenantAuthorizaation(string tenantId, string userId, UserTenantAuthorization authorization)

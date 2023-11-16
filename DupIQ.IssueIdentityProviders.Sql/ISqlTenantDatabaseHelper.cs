@@ -12,6 +12,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 		public void AddOrUpdateTenantConfiguration(TenantConfiguration tenantConfiguration);
 		public void AddOrUpdateTenantProfile(TenantProfile tenantProfile);
 		public void AddOrUpdateTenantProfileToUserProfileList(string tenantId, string userId, string userName, string email, UserTenantAuthorization auth);
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization authorization);
 		public void AddOrUpdateUserTenantAuthorizaation(string tenantId, string userId, UserTenantAuthorization authorization);
 		public void ConfigureTenantDatabase();
 		void DeleteProjects(string tenantId);

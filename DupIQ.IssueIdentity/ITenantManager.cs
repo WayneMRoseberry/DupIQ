@@ -15,6 +15,8 @@
 
 		public void AddTenantProfileToUserTenantList(string userId, string tenantId, UserTenantAuthorization authorization);
 
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization auth);
+
 		public void AddUserTenantAuthorization(string tenantId, string userId, UserTenantAuthorization authorization);
 
 		public string DefaultTenant();
@@ -74,6 +76,12 @@
 		Active,
 		Inactive,
 		Deleted
+	}
+
+	public enum UserServiceAuthorization
+	{
+		Admin,
+		Guest
 	}
 
 	public enum UserTenantAuthorization

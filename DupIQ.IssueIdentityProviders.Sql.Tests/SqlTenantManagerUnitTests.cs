@@ -21,6 +21,49 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		}
 
 		[TestMethod]
+		public void AddOrUpdateUserServiceAuthorization()
+		{
+			string passedInUserId = string.Empty;
+			UserServiceAuthorization authPassedIn = UserServiceAuthorization.Guest;
+			MockSqlTenantDatabaseHelper mockSqlTenantDatabaseHelper = new MockSqlTenantDatabaseHelper();
+			mockSqlTenantDatabaseHelper.overrideAddOrUpdateUserServiceAuthorization = (u, a) => { passedInUserId = u; authPassedIn = a; };
+
+			var tenantManager = new SqlTenantManager(mockSqlTenantDatabaseHelper);
+
+			tenantManager.AddOrUpdateUserServiceAuthorization("user1", UserServiceAuthorization.Admin);
+			Assert.AreEqual("user1", passedInUserId, "Fail if the user did not get passed to db layer.");
+			Assert.AreEqual(UserServiceAuthorization.Admin, authPassedIn, "Fail if the passed in auth was not expected value.");
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void AddOrUpdateUserServiceAuthorization_nulluserid()
+		{
+			string passedInUserId = string.Empty;
+			UserServiceAuthorization authPassedIn = UserServiceAuthorization.Guest;
+			MockSqlTenantDatabaseHelper mockSqlTenantDatabaseHelper = new MockSqlTenantDatabaseHelper();
+			mockSqlTenantDatabaseHelper.overrideAddOrUpdateUserServiceAuthorization = (u, a) => { passedInUserId = u; authPassedIn = a; };
+
+			var tenantManager = new SqlTenantManager(mockSqlTenantDatabaseHelper);
+
+			tenantManager.AddOrUpdateUserServiceAuthorization(null, UserServiceAuthorization.Admin);
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void AddOrUpdateUserServiceAuthorization_emptyuserid()
+		{
+			string passedInUserId = string.Empty;
+			UserServiceAuthorization authPassedIn = UserServiceAuthorization.Guest;
+			MockSqlTenantDatabaseHelper mockSqlTenantDatabaseHelper = new MockSqlTenantDatabaseHelper();
+			mockSqlTenantDatabaseHelper.overrideAddOrUpdateUserServiceAuthorization = (u, a) => { passedInUserId = u; authPassedIn = a; };
+
+			var tenantManager = new SqlTenantManager(mockSqlTenantDatabaseHelper);
+
+			tenantManager.AddOrUpdateUserServiceAuthorization(string.Empty, UserServiceAuthorization.Admin);
+		}
+
+		[TestMethod]
 		public void AddProject()
 		{
 			string passedInProfile = string.Empty;

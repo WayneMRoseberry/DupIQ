@@ -283,5 +283,14 @@ namespace DupIQ.IssueIdentityProviders.Sql
 		{
 			throw new NotImplementedException();
 		}
+
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization auth)
+		{
+			if(string.IsNullOrEmpty(userId))
+			{
+				throw new ArgumentNullException("userId");
+			}
+			_databaseHelper.AddOrUpdateUserServiceAuthorization(userId, auth);
+		}
 	}
 }

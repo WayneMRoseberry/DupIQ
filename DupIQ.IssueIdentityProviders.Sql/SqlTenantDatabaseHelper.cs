@@ -912,5 +912,10 @@ CREATE TABLE [dbo].[TenantUsersProjects](
 			SqlConnection sqlConnection = new SqlConnection(builder.ConnectionString);
 			return sqlConnection;
 		}
+
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization authorization)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

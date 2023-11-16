@@ -209,5 +209,10 @@
 		{
 			throw new NotImplementedException();
 		}
+
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization auth)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
