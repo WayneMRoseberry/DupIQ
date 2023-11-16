@@ -232,6 +232,11 @@
 		{
 			throw new NotImplementedException();
 		}
+
+		public UserServiceAuthorization GetUserServiceAuthorization(string userId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 }

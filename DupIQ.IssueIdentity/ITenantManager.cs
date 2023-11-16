@@ -57,6 +57,8 @@
 		/// <returns>Array of TenantProfile objects</returns>
 		public TenantProfile[] GetTenants(string userId);
 
+		public UserServiceAuthorization GetUserServiceAuthorization(string userId);
+
 		public UserTenantAuthorization GetUserTenantAuthorization(string tenantId, string userId);
 
 		public void PurgeTenants();
@@ -81,7 +83,8 @@
 	public enum UserServiceAuthorization
 	{
 		Admin,
-		Guest
+		Guest,
+		None
 	}
 
 	public enum UserTenantAuthorization

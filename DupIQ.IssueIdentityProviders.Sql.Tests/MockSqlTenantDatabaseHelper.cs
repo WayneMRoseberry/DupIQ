@@ -22,6 +22,7 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		public Func<string, DbDataReader> overrideGetTenantProfile = (s) => { throw new NotImplementedException(); };
 		public Func<DbDataReader> overrideGetTenants = () => { throw new NotImplementedException(); };
 		public Func<string, DbDataReader> overrideGetTenants_UserId = (u) => { throw new NotImplementedException(); };
+		public Func<string, DbDataReader> overrideGetUserServiceAuthorization = (u) => { throw new NotImplementedException(); };
 		public Func<string, string, DbDataReader> overrideGetUserTenantAuthorization = (t, u) => { throw new NotImplementedException(); };
 
 		public string ConnectionString { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -173,7 +174,7 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 
 		public DbDataReader GetUserServiceAuthorization(string userId)
 		{
-			throw new NotImplementedException();
+			return overrideGetUserServiceAuthorization(userId);
 		}
 
 		public DbDataReader GetUserTenantAuthorization(string tenantId, string userId)

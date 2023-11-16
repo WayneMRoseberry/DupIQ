@@ -371,6 +371,87 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		}
 
 		[TestMethod]
+		public void GetUserServiceAuthorization()
+		{
+			MockSqlTenantDatabaseHelper databaseHelper = new MockSqlTenantDatabaseHelper();
+			databaseHelper.overrideGetUserServiceAuthorization = (u) =>
+			{
+				DataTable dataTable = CreateUserServiceAuthDataTable();
+				dataTable.Rows.Add(UserServiceAuthorization.Admin.ToString());
+
+				return dataTable.CreateDataReader();
+			};
+
+			SqlTenantManager sqlTenantManager = new SqlTenantManager(databaseHelper);
+
+			UserServiceAuthorization auth = sqlTenantManager.GetUserServiceAuthorization("user1");
+			Assert.AreEqual(UserServiceAuthorization.Admin, auth, "Fail if the expected authorization is not returned.");
+
+		}
+
+		[TestMethod]
+		public void GetUserServiceAuthorization_returnsGuest()
+		{
+			MockSqlTenantDatabaseHelper databaseHelper = new MockSqlTenantDatabaseHelper();
+			databaseHelper.overrideGetUserServiceAuthorization = (u) =>
+			{
+				DataTable dataTable = CreateUserServiceAuthDataTable();
+				dataTable.Rows.Add(UserServiceAuthorization.Guest.ToString());
+
+				return dataTable.CreateDataReader();
+			};
+
+			SqlTenantManager sqlTenantManager = new SqlTenantManager(databaseHelper);
+
+			UserServiceAuthorization auth = sqlTenantManager.GetUserServiceAuthorization("user1");
+			Assert.AreEqual(UserServiceAuthorization.Guest, auth, "Fail if the expected authorization is not returned.");
+
+		}
+
+		[TestMethod]
+		public void GetUserServiceAuthorization_returnsbogusrole()
+		{
+			MockSqlTenantDatabaseHelper databaseHelper = new MockSqlTenantDatabaseHelper();
+			databaseHelper.overrideGetUserServiceAuthorization = (u) =>
+			{
+				DataTable dataTable = CreateUserServiceAuthDataTable();
+				dataTable.Rows.Add("bogus role");
+
+				return dataTable.CreateDataReader();
+			};
+
+			SqlTenantManager sqlTenantManager = new SqlTenantManager(databaseHelper);
+
+			UserServiceAuthorization auth = sqlTenantManager.GetUserServiceAuthorization("user1");
+			Assert.AreEqual(UserServiceAuthorization.None, auth, "Fail if the expected authorization is not returned.");
+
+		}
+
+		[TestMethod]
+		public void GetUserServiceAuthorization_databasereturnsemptyreader()
+		{
+			MockSqlTenantDatabaseHelper databaseHelper = new MockSqlTenantDatabaseHelper();
+			databaseHelper.overrideGetUserServiceAuthorization = (u) =>
+			{
+				DataTable dataTable = CreateUserServiceAuthDataTable();
+				return dataTable.CreateDataReader();
+			};
+
+			SqlTenantManager sqlTenantManager = new SqlTenantManager(databaseHelper);
+
+			UserServiceAuthorization auth = sqlTenantManager.GetUserServiceAuthorization("user1");
+			Assert.AreEqual(UserServiceAuthorization.None, auth, "Any authorization other than None is failure.");
+
+		}
+
+		private static DataTable CreateUserServiceAuthDataTable()
+		{
+			DataTable dataTable = new DataTable();
+			dataTable.Columns.Add("Role", typeof(string));
+			return dataTable;
+		}
+
+		[TestMethod]
 		public void GetUserTenantAuthorization()
 		{
 			string passedInTenatId = string.Empty;

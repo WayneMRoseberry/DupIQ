@@ -30,6 +30,15 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			_databaseHelper.AddOrUpdateProjectExtendedProperties(tenantId, projectId, props);
 		}
 
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization auth)
+		{
+			if (string.IsNullOrEmpty(userId))
+			{
+				throw new ArgumentNullException("userId");
+			}
+			_databaseHelper.AddOrUpdateUserServiceAuthorization(userId, auth);
+		}
+
 		public void AddProject(string tenantId, Project project)
 		{
 			project.ProjectId = project.ProjectId.Trim();
@@ -274,6 +283,24 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			}
 		}
 
+		public UserServiceAuthorization GetUserServiceAuthorization(string userId)
+		{
+			using (DbDataReader reader = _databaseHelper.GetUserServiceAuthorization(userId))
+			{
+				UserServiceAuthorization result = UserServiceAuthorization.None;
+				while (reader.Read())
+				{
+					string readerRoleString = reader["Role"].ToString().Trim();
+					bool worked = Enum.TryParse<UserServiceAuthorization>(readerRoleString, out result);
+					if (!worked)
+					{
+						result = UserServiceAuthorization.None;
+					}
+				}
+				return result;
+			}
+		}
+
 		public void PurgeTenants()
 		{
 			_databaseHelper.PurgeTenants(true);
@@ -282,15 +309,6 @@ namespace DupIQ.IssueIdentityProviders.Sql
 		public void UpdateProject(string tenantId, Project project)
 		{
 			throw new NotImplementedException();
-		}
-
-		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization auth)
-		{
-			if(string.IsNullOrEmpty(userId))
-			{
-				throw new ArgumentNullException("userId");
-			}
-			_databaseHelper.AddOrUpdateUserServiceAuthorization(userId, auth);
 		}
 	}
 }
