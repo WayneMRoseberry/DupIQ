@@ -59,7 +59,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpPost("Tenant")]
-		public string AddTenant(string tenantName, string ownerId, string ownerEmail, string ownerName)
+		public string AddTenant(string tenantName, string ownerId)
 		{
 			string tenantId = System.Guid.NewGuid().ToString();
 			TenantProfile tenantProfile = new TenantProfile()
