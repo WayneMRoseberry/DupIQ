@@ -171,6 +171,11 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 			return overrideGetTenants_UserId(userId);
 		}
 
+		public DbDataReader GetUserServiceAuthorization(string userId)
+		{
+			throw new NotImplementedException();
+		}
+
 		public DbDataReader GetUserTenantAuthorization(string tenantId, string userId)
 		{
 			return overrideGetUserTenantAuthorization(tenantId, userId);

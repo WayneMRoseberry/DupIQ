@@ -33,6 +33,8 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public DbDataReader GetTenants(string userId);
 
+		public DbDataReader GetUserServiceAuthorization(string userId);
+
 		DbDataReader GetUserTenantAuthorization(string tenantId, string userId);
 
 		public void PurgeTenants(bool purgeDependencies);

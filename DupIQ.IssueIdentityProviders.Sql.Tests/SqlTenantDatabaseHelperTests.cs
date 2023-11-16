@@ -58,6 +58,59 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		}
 
 		[TestMethod]
+		public void AddOrUpdateServiceUserAuth()
+		{
+			SqlTenantDatabaseHelper sqlTenantDatabaseHelper = new SqlTenantDatabaseHelper(SqlConfig);
+			sqlTenantDatabaseHelper.AddOrUpdateUserServiceAuthorization("user1", UserServiceAuthorization.Admin);
+
+			DbDataReader reader = sqlTenantDatabaseHelper.GetUserServiceAuthorization("user1");
+			Assert.IsNotNull(reader);
+			string authorization = UserServiceAuthorization.Guest.ToString();
+			int recordCount = 0;
+			while(reader.Read())
+			{
+				recordCount++;
+				authorization = reader["Role"].ToString();
+			}
+			Assert.AreEqual(1, recordCount, "Fail if there is not one record for the user.");
+			Assert.AreEqual(UserServiceAuthorization.Admin.ToString(), authorization, "Fail if the user authorization was not set as expected.");
+		}
+
+		[TestMethod]
+		public void AddOrUpdateServiceUserAuth_settoguest()
+		{
+			SqlTenantDatabaseHelper sqlTenantDatabaseHelper = new SqlTenantDatabaseHelper(SqlConfig);
+			sqlTenantDatabaseHelper.AddOrUpdateUserServiceAuthorization("user1", UserServiceAuthorization.Guest);
+
+			DbDataReader reader = sqlTenantDatabaseHelper.GetUserServiceAuthorization("user1");
+			Assert.IsNotNull(reader);
+			string authorization = UserServiceAuthorization.Admin.ToString();
+			int recordCount = 0;
+			while (reader.Read())
+			{
+				recordCount++;
+				authorization = reader["Role"].ToString();
+			}
+			Assert.AreEqual(1, recordCount, "Fail if there is not one record for the user.");
+			Assert.AreEqual(UserServiceAuthorization.Guest.ToString(), authorization, "Fail if the user authorization was not set as expected.");
+		}
+
+		[TestMethod]
+		public void GetUserServiceAuth_userdoesnotexist()
+		{
+			SqlTenantDatabaseHelper sqlTenantDatabaseHelper = new SqlTenantDatabaseHelper(SqlConfig);
+
+			DbDataReader reader = sqlTenantDatabaseHelper.GetUserServiceAuthorization("user1");
+			Assert.IsNotNull(reader);
+			int recordCount = 0;
+			while (reader.Read())
+			{
+				recordCount++;
+			}
+			Assert.AreEqual(0, recordCount, "Fail if anything was returned for non-existent user.");
+		}
+
+		[TestMethod]
 		public void AddOrUpdateTenantProfile()
 		{
 			SqlTenantDatabaseHelper sqlTenantDatabaseHelper = new SqlTenantDatabaseHelper(SqlConfig);

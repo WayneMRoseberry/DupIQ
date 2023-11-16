@@ -123,6 +123,20 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			};
 		}
 
+		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization authorization)
+		{
+			using (SqlConnection connection = GetTenantDBConnection())
+			{
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("AddOrUpdateServiceUserAuth", connection) { CommandType = CommandType.StoredProcedure })
+				{
+					command.Parameters.AddWithValue("@UserId", userId);
+					command.Parameters.AddWithValue("@Role", authorization.ToString());
+					command.ExecuteNonQuery();
+				}
+			}
+		}
+
 		public void AddOrUpdateUserTenantAuthorizaation(string tenantId, string userId, UserTenantAuthorization authorization)
 		{
 			throw new NotImplementedException();
@@ -461,6 +475,27 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 
 		}
 
+		public DbDataReader GetUserServiceAuthorization(string userId)
+		{
+			using(SqlConnection connection = GetTenantDBConnection())
+			{
+				connection.Open();
+				using(SqlCommand command = new SqlCommand("SELECT Role FROM ServiceUserAuth WHERE UserId = @UserId", connection))
+				{
+					command.Parameters.AddWithValue("@UserId", userId);
+					DataTable dataTable = new DataTable();
+					dataTable.Columns.Add("Role", typeof(String));
+
+					SqlDataReader sqlDataReader = command.ExecuteReader();
+					while(sqlDataReader.Read())
+					{
+						dataTable.Rows.Add(sqlDataReader["Role"].ToString().Trim());
+					}
+					return dataTable.CreateDataReader();
+				}
+			}
+		}
+
 		public DbDataReader GetUserTenantAuthorization(string tenantId, string userId)
 		{
 			using (SqlConnection connection = GetTenantDBConnection())
@@ -502,6 +537,7 @@ DELETE FROM TenantUsers WHERE TenantId IS NOT NULL
 DELETE FROM TenantUsersProjects WHERE TenantId IS NOT NULL
 DELETE FROM Projects WHERE TenantId IS NOT NULL
 DELETE FROM ProjectsExtendedProperties WHERE TenantId IS NOT NULL
+DELETE FROM ServiceUserAuth WHERE UserId IS NOT NULL
 ", connection))
 				{
 					command.ExecuteNonQuery();
@@ -972,11 +1008,6 @@ CREATE TABLE [dbo].[TenantUsersProjects](
 
 			SqlConnection sqlConnection = new SqlConnection(builder.ConnectionString);
 			return sqlConnection;
-		}
-
-		public void AddOrUpdateUserServiceAuthorization(string userId, UserServiceAuthorization authorization)
-		{
-			throw new NotImplementedException();
 		}
 	}
 }
