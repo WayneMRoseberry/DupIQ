@@ -135,6 +135,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 				connection.Open();
 				CreateTable_Projects(connection);
 				CreateTable_ProjectsExtendedProperties(connection);
+				CreateTable_ServiceUserAuth(connection);
 				CreateTable_Tenants(connection);
 				CreateTable_TenantsConfigurations(connection);
 				CreateTable_TenantUsers(connection);
@@ -144,6 +145,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 				CreateSproc_AddOrUpdateTenantUserProject(connection);
 				CreateSproc_AddOrUpdateProject(connection);
 				CreateSproc_AddOrUpdateProjectExtendedProperties(connection);
+				CreateSproc_AddOrUpdateServiceUserAuth(connection);
 				CreateSproc_AddOrUpdateTenantConfigurations(connection);
 				CreateSproc_AddOrUpdateTenantProfile(connection);
 			}
@@ -547,6 +549,43 @@ END')
 
 		}
 
+		private void CreateSproc_AddOrUpdateServiceUserAuth(SqlConnection connection)
+		{
+			using (SqlCommand command = new SqlCommand(
+@"
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'AddOrUpdateServiceUserAuth') AND type in (N'P', N'PC'))
+  DROP PROCEDURE [dbo].[AddOrUpdateServiceUserAuth]
+
+exec('CREATE PROCEDURE [dbo].[AddOrUpdateServiceUserAuth]
+	@UserId nchar(50),
+	@Role nchar(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM dbo.ServiceUserAuth WHERE UserId = @UserId)
+    BEGIN
+        -- The User already exists, update the row
+        UPDATE dbo.ServiceUserAuth
+        SET Role = @Role
+        WHERE UserId = @UserId;
+    END
+    ELSE
+    BEGIN
+        -- The User does not exist, insert a new row
+        INSERT INTO dbo.ServiceUserAuth(UserId, Role)
+        VALUES (@UserId, @Role);
+    END
+END')
+"
+,
+		connection))
+			{
+				command.ExecuteNonQuery();
+			}
+
+		}
+
 		private void CreateSproc_AddOrUpdateTenantUser(SqlConnection connection)
 		{
 			using (SqlCommand command = new SqlCommand(
@@ -792,6 +831,28 @@ CREATE TABLE [dbo].[ProjectsExtendedProperties](
  CONSTRAINT [PK_ProjectsExtendedProperties] PRIMARY KEY CLUSTERED 
 (
 	[TenantId] ASC, [ProjectId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+",
+					connection))
+			{
+				command.ExecuteNonQuery();
+			}
+		}
+
+		private void CreateTable_ServiceUserAuth(SqlConnection connection)
+		{
+			using (SqlCommand command = new SqlCommand(@"
+IF OBJECT_ID(N'dbo.ServiceUserAuth', N'U') IS NOT NULL  
+   DROP TABLE [dbo].[ServiceUserAuth];  
+
+IF OBJECT_ID(N'dbo.ServiceUserAuth', N'U') IS NULL
+CREATE TABLE [dbo].[ServiceUserAuth](
+	[UserId] [nchar](50) NOT NULL,
+	[Role] [nchar](50) NOT NULL
+ CONSTRAINT [PK_ServiceUserAuth] PRIMARY KEY CLUSTERED 
+(
+	[UserId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 ",
