@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DupIQ.IssueIdentity.ConfigureServices": {
+      "commandName": "Project",
+      "commandLineArgs": "serviceadmin newadmin new admin admin@dupiq.com"
+    }
+  }
+}

@@ -15,7 +15,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 		public string AddOrUpdateUser(IssueIdentityUser user)
 		{
 			bool nameChangeOrInitialize = true;
-			if (!sqlUserDbHelper.UserExists(user.Id))
+			if (string.IsNullOrEmpty(user.Id) || !sqlUserDbHelper.UserExists(user.Id))
 			{
 				user.Id = Guid.NewGuid().ToString();
 			}
