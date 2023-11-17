@@ -139,7 +139,17 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public void AddOrUpdateUserTenantAuthorizaation(string tenantId, string userId, UserTenantAuthorization authorization)
 		{
-			throw new NotImplementedException();
+			using (SqlConnection connection = GetTenantDBConnection())
+			{
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("AddOrUpdateTenantUser", connection) { CommandType = CommandType.StoredProcedure })
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@UserId", userId);
+					command.Parameters.AddWithValue("@Role", authorization.ToString());
+					command.ExecuteNonQuery();
+				}
+			}
 		}
 
 		public void ConfigureTenantDatabase()
@@ -506,17 +516,12 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 					command.Parameters.AddWithValue("@TenantId", tenantId);
 					command.Parameters.AddWithValue("@UserId", userId);
 					DataTable dataTable = new DataTable();
-					dataTable.Columns.Add("TenantId", typeof(string));
-					dataTable.Columns.Add("UserId", typeof(string));
 					dataTable.Columns.Add("Role", typeof(string));
 
 					SqlDataReader sqlDataReader = command.ExecuteReader();
 					while(sqlDataReader.Read())
 					{
-						dataTable.Rows.Add(
-							sqlDataReader["TenantId"].ToString().Trim(),
-							sqlDataReader["UserId"].ToString().Trim(),
-							sqlDataReader["Role"].ToString().Trim());
+						dataTable.Rows.Add(sqlDataReader["Role"].ToString().Trim());
 					}
 
 					return dataTable.CreateDataReader();

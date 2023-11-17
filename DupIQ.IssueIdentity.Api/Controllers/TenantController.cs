@@ -72,6 +72,12 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			return GlobalConfiguration.TenantManager.AddTenant(tenantProfile);
 		}
 
+		[Microsoft.AspNetCore.Mvc.HttpPost("Tenant/UserAuthorization")]
+		public void AddTenantUserAuthorization(string tenantId, string userId, UserTenantAuthorization userTenantAuthorization)
+		{
+			GlobalConfiguration.TenantManager.AddUserTenantAuthorization(tenantId, userId, userTenantAuthorization);
+		}
+
 		[Microsoft.AspNetCore.Mvc.HttpGet("Tenant")]
 		public TenantProfile GetTenant(string tenantId)
 		{
@@ -86,6 +92,12 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public string[] GetTenants()
 		{
 			return GlobalConfiguration.TenantManager.GetTenants();
+		}
+
+		[Microsoft.AspNetCore.Mvc.HttpGet("Tenant/UserAuthorization")]
+		public UserTenantAuthorization GetTenantUserAuthorization(string tenantId, string userId)
+		{
+			return GlobalConfiguration.TenantManager.GetUserTenantAuthorization(tenantId, userId);
 		}
 
 	}
