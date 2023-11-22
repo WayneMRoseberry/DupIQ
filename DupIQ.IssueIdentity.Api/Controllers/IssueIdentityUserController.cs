@@ -1,5 +1,6 @@
 ﻿using DupIQ.IssueIdentity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -32,6 +33,16 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 
 		}
 
+		[Microsoft.AspNetCore.Mvc.HttpPost("password")]
+		public void SetPassword(string userId,string password)
+		{
+			IssueIdentityUser user = GlobalConfiguration.UserManager.GetUserById(userId);
+			PasswordHasher<IssueIdentityUser> passwordHasher = new PasswordHasher<IssueIdentityUser>();
+			string hashedPassword = passwordHasher.HashPassword(user, password);
+
+			GlobalConfiguration.UserManager.AddOrUpdateUserPasswordHash(userId, hashedPassword);
+		}
+
 		[Microsoft.AspNetCore.Mvc.HttpDelete]
 		public void DeleteUser(string userId)
 		{
@@ -39,8 +50,18 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpPost("/token")]
-		public IActionResult GetToken([FromBody]IssueIdentityUser user)
+		public IActionResult GetToken([FromBody]IssueIdentityUser user, string password)
 		{
+			string storedHash = GlobalConfiguration.UserManager.GetUserPasswordHash(user.Id);
+
+			PasswordHasher<IssueIdentityUser> passwordHasher = new PasswordHasher<IssueIdentityUser>();
+			PasswordVerificationResult passwordVerification = passwordHasher.VerifyHashedPassword(user, storedHash, password);
+
+			if(passwordVerification.Equals(PasswordVerificationResult.Failed))
+			{
+				return Unauthorized();
+			}
+
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Expires = DateTime.UtcNow.AddMinutes(120),

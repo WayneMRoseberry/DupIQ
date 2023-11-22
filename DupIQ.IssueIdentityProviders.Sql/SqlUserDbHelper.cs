@@ -33,13 +33,29 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			}
 		}
 
+		public void AddOrUpdateUserPasswordHash(string userId, string passwordHash)
+		{
+			using (SqlConnection connection = GetTenantDBConnection())
+			{
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("AddOrUpdateUserPasswordHashes", connection) { CommandType = CommandType.StoredProcedure })
+				{
+					command.Parameters.AddWithValue("@UserId", userId);
+					command.Parameters.AddWithValue("@PasswordHash", passwordHash);
+					command.ExecuteNonQuery();
+				}
+			}
+		}
+
 		public void ConfigureDatabase()
 		{
 			using (SqlConnection connection = GetTenantDBConnection())
 			{
 				connection.Open();
+				CreateTable_PasswordHashes(connection);
 				CreateTable_Users(connection);
 				CreateSproc_AddOrUpdateUser(connection);
+				CreateSproc_AddOrUpdateUserPasswordHashes(connection);
 			}
 		}
 
@@ -63,6 +79,23 @@ namespace DupIQ.IssueIdentityProviders.Sql
 				command.Parameters.AddWithValue("@UserId", userId);
 				SqlDataReader reader = command.ExecuteReader();
 				return reader;
+			}
+		}
+
+		public string GetUserPasswordHash(string userId)
+		{
+			string result = string.Empty;
+			SqlConnection connection = GetTenantDBConnection();
+			connection.Open();
+			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueIdentityUserPasswordHashes WHERE UserId=@UserId", connection))
+			{
+				command.Parameters.AddWithValue("@UserId", userId);
+				SqlDataReader reader = command.ExecuteReader();
+				while (reader.Read())
+				{
+					result = reader["PasswordHash"].ToString().Trim();
+				}
+				return result;
 			}
 		}
 
@@ -98,6 +131,43 @@ namespace DupIQ.IssueIdentityProviders.Sql
 				}
 				return true;
 			}
+		}
+
+		private void CreateSproc_AddOrUpdateUserPasswordHashes(SqlConnection connection)
+		{
+			using (SqlCommand command = new SqlCommand(
+@"
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'AddOrUpdateUserPasswordHashes') AND type in (N'P', N'PC'))
+  DROP PROCEDURE [dbo].[AddOrUpdateUserPasswordHashes]
+
+exec('CREATE PROCEDURE [dbo].[AddOrUpdateUserPasswordHashes]
+    @UserId nchar(50),
+    @PasswordHash nchar(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM dbo.IssueIdentityUserPasswordHashes WHERE UserId = @UserId)
+    BEGIN
+        -- The User already exists, update the row
+        UPDATE dbo.IssueIdentityUserPasswordHashes
+        SET PasswordHash = @PasswordHash
+        WHERE UserId = @UserId;
+    END
+    ELSE
+    BEGIN
+        -- The User does not exist, insert a new row
+        INSERT INTO dbo.IssueIdentityUserPasswordHashes(UserId, PasswordHash)
+        VALUES (@UserId, @PasswordHash);
+    END
+END')
+"
+,
+		connection))
+			{
+				command.ExecuteNonQuery();
+			}
+
 		}
 
 		private void CreateSproc_AddOrUpdateUser(SqlConnection connection)
@@ -147,6 +217,26 @@ END')
 
 		}
 
+
+		private void CreateTable_PasswordHashes(SqlConnection connection)
+		{
+			using (SqlCommand command = new SqlCommand(@"
+IF OBJECT_ID(N'dbo.IssueIdentityUserPasswordHashes', N'U') IS NOT NULL  
+   DROP TABLE [dbo].[IssueIdentityUserPasswordHashes];  
+
+CREATE TABLE [dbo].[IssueIdentityUserPasswordHashes](
+	[UserId] [nchar](50) NOT NULL,
+	[PasswordHash] [nchar](100) NOT NULL
+ CONSTRAINT [PK_IssueIdentityUserPasswordHashes] PRIMARY KEY CLUSTERED 
+(
+	[UserId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]) ON [PRIMARY]
+",
+					connection))
+			{
+				command.ExecuteNonQuery();
+			}
+		}
 		private void CreateTable_Users(SqlConnection connection)
 		{
 			using (SqlCommand command = new SqlCommand(@"

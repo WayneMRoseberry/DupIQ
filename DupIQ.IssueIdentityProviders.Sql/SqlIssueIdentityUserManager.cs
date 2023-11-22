@@ -43,6 +43,10 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			return user.Id;
 		}
 
+		public void AddOrUpdateUserPasswordHash(string userId, string passwordHash)
+		{
+			this.sqlUserDbHelper.AddOrUpdateUserPasswordHash(userId, passwordHash);
+		}
 		public void DeleteUser(string userId)
 		{
 			if (!sqlUserDbHelper.UserExists(userId))
@@ -82,6 +86,11 @@ namespace DupIQ.IssueIdentityProviders.Sql
 		public IssueIdentityUser GetUserByName(string userName)
 		{
 			throw new NotImplementedException();
+		}
+
+		public string GetUserPasswordHash(string id)
+		{
+			return this.sqlUserDbHelper.GetUserPasswordHash(id);
 		}
 	}
 }

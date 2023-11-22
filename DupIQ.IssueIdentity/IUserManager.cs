@@ -8,6 +8,8 @@
 		/// <param name="user">User to add. UserName property must be unique. UserId will be overwritten by IUserManager if user does not exist. UserId cannot be changed after user is created.</param>
 		/// <returns>UserId of the added or updated user.</returns>
 		public string AddOrUpdateUser(IssueIdentityUser user);
+
+		public void AddOrUpdateUserPasswordHash(string userId, string passwordHash);
 		
 		/// <summary>
 		/// Deletes specified user.
@@ -35,6 +37,8 @@
 		/// <param name="id">UserId property of the user to get.</param>
 		/// <returns>IssueIdentityUser object identifying the user.</returns>
 		public IssueIdentityUser GetUserById(string  id);
+
+		public string GetUserPasswordHash(string  id);
 	}
 	
 	public class IssueIdentityUserException : Exception

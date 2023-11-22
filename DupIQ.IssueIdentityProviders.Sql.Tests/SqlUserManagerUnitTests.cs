@@ -216,6 +216,11 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 			overrideAddUser(user);
 		}
 
+		public void AddOrUpdateUserPasswordHash(string userId, string passwordHash)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void ConfigureDatabase()
 		{
 			throw new NotImplementedException();
@@ -229,6 +234,11 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		public DbDataReader GetUser(string userId)
 		{
 			return overrideGetUser(userId);
+		}
+
+		public string GetUserPasswordHash(string userId)
+		{
+			throw new NotImplementedException();
 		}
 
 		public bool UserExists(string userId)
