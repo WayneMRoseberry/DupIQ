@@ -1,6 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using DupIQ.IssueIdentity;
 using DupIQ.IssueIdentity.ConfigureServices;
 using DupIQ.IssueIdentityProviders.Sql;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 
 AppArguments appArguments = new AppArguments(Environment.GetCommandLineArgs());	
@@ -37,6 +39,10 @@ switch (appArguments.Command)
 			};
 			sqlIssueIdentityUserManager.AddOrUpdateUser(user);
 			tenantManager.AddOrUpdateUserServiceAuthorization(user.Id, DupIQ.IssueIdentity.UserServiceAuthorization.Admin);
+			PasswordHasher<IssueIdentityUser> passwordHasher = new PasswordHasher<IssueIdentityUser>();
+			string hashedPassword = passwordHasher.HashPassword(user, appArguments.ServiceAdminPassword);
+			sqlIssueIdentityUserManager.AddOrUpdateUserPasswordHash(user.Id, hashedPassword);
+
 			break;
 		}
 }

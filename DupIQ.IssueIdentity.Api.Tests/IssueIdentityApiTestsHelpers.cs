@@ -96,12 +96,14 @@ internal static class IssueIdentityApiTestsHelpers
 			return request;
 		}
 
-		static internal HttpWebRequest CreatePostRequest(string postBody, string requestUri)
+		static internal HttpWebRequest CreatePostRequest(string postBody, string requestUri, string token="")
 		{
 			var request = (HttpWebRequest)WebRequest.Create(requestUri);
 			request.Method = "POST";
+			request.PreAuthenticate = true;
 			request.ContentType = "application/json";
 			request.Headers.Add("Access-Control-Allow-Origin", "*");
+			request.Headers.Add("Authorization", "Bearer " + token);
 			Console.WriteLine("writing to request stream");
 			using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
 			{

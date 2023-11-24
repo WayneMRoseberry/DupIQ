@@ -61,13 +61,16 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public void DeleteUser(string userId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("DELETE FROM IssueIdentityUsers WHERE UserId=@UserId", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@UserId", userId);
-				command.ExecuteNonQuery();
-			}
+				connection.Open();
+				using (SqlCommand command = new SqlCommand(@"DELETE FROM IssueIdentityUserPasswordHashes WHERE UserId=@UserId
+	DELETE FROM IssueIdentityUsers WHERE UserId=@UserId", connection))
+				{
+					command.Parameters.AddWithValue("@UserId", userId);
+					command.ExecuteNonQuery();
+				}
+			}	
 		}
 
 		public DbDataReader GetUser(string userId)
@@ -85,7 +88,8 @@ namespace DupIQ.IssueIdentityProviders.Sql
 		public string GetUserPasswordHash(string userId)
 		{
 			string result = string.Empty;
-			SqlConnection connection = GetTenantDBConnection();
+			using (SqlConnection connection = GetTenantDBConnection())
+			{
 			connection.Open();
 			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueIdentityUserPasswordHashes WHERE UserId=@UserId", connection))
 			{
@@ -96,6 +100,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 					result = reader["PasswordHash"].ToString().Trim();
 				}
 				return result;
+			}
 			}
 		}
 
@@ -116,20 +121,22 @@ namespace DupIQ.IssueIdentityProviders.Sql
 
 		public bool UserNameAvailable(string userName)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM IssueIdentityUsers WHERE UserName=@UserName", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@UserName", userName);
-				SqlDataReader reader = command.ExecuteReader();
-				while (reader.Read())
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM IssueIdentityUsers WHERE UserName=@UserName", connection))
 				{
-					if (userName.Equals(reader["UserName"].ToString().Trim()))
+					command.Parameters.AddWithValue("@UserName", userName);
+					SqlDataReader reader = command.ExecuteReader();
+					while (reader.Read())
 					{
-						return false;
+						if (userName.Equals(reader["UserName"].ToString().Trim()))
+						{
+							return false;
+						}
 					}
+					return true;
 				}
-				return true;
 			}
 		}
 

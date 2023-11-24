@@ -556,7 +556,6 @@ DELETE FROM TenantUsers WHERE TenantId IS NOT NULL
 DELETE FROM TenantUsersProjects WHERE TenantId IS NOT NULL
 DELETE FROM Projects WHERE TenantId IS NOT NULL
 DELETE FROM ProjectsExtendedProperties WHERE TenantId IS NOT NULL
-DELETE FROM ServiceUserAuth WHERE UserId IS NOT NULL
 ", connection))
 				{
 					command.ExecuteNonQuery();

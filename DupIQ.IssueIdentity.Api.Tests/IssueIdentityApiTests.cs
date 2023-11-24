@@ -7,9 +7,16 @@ namespace DupIQ.IssueIdentity.Api.Tests
 {
 	[TestClass]
 	public class IssueIdentityApiTests
-	{
+	{	
+		// this changes every time the database is paved or service admin reset
+		// need to move it somewhere that is not compiled or shared
+		private const string serviceadmin = "f8363ebd-8dc3-4bc3-b00c-fbd1c2aec89a"; 
 		private string UriBase = "http://localhost:5000";
 		private string _sharedTenantId = string.Empty;
+		private string _sharedTenantWriterId = string.Empty;
+		private string _sharedTenantAdminId = string.Empty;
+		private string _sharedTenantReaderId = string.Empty;
+		private string _adminToken = string.Empty;
 
 		string _tenantName = "test_tenant";
 		string _ownerId = "user1";
@@ -22,6 +29,8 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		public void InitializeDupIq()
 		{
 			InitializeFromConfig();
+			GetAdminToken();
+			CreateSharedUsers();
 			CreateSharedTenant();
 			CreateSharedProject();
 		}
@@ -47,6 +56,28 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				string responseBody = responseReader.ReadToEnd();
 				Console.WriteLine($"Response to delete all tenants: {responseBody}");
 			}
+
+			string deleteUserRequestUriTemplate = $"{UriBase}/IssueIdentityUser?userId=";
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate+_sharedTenantAdminId);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+			}
+
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantReaderId);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+			}
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantWriterId);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+			}
+
 		}
 
 		[TestMethod]
@@ -558,7 +589,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				tenantId = _sharedTenantId,
 				projectId = _sharedProjectId,
 				name = _sharedProjectName,
-				ownerId = _ownerId,
+				ownerId = _sharedTenantAdminId,
 				similarityThreshold = 0.95f
 			};
 			string addProjectUriBase = $"{UriBase}/Tenant/Project?tenantId={_sharedTenantId}";
@@ -567,7 +598,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine($" addProjectUriBase:{addProjectUriBase}");
 			Console.WriteLine($" serializedProjectJson:{serializedProjectJson}");
 
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(serializedProjectJson, addProjectUriBase);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(serializedProjectJson, addProjectUriBase, _adminToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
@@ -577,18 +608,115 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 		}
 
+		private void CreateSharedUsers()
+		{
+			string AddUserURITemplate = $"{UriBase}/IssueIdentityUser";
+			string SetUserPasswordTemplat = $"{UriBase}/IssueIdentityUser/password?password=password";
+			Console.WriteLine($"Create user Uri:{AddUserURITemplate}");
+
+			IssueIdentityUser user = new IssueIdentityUser
+			{
+				id = "temp",
+				name = "testtenantwriter",
+				firstname = "writer",
+				lastname = "writer",
+				email = "tenantwriter@email.com",
+				userstatus = 0
+			};
+
+			string userJson = JsonSerializer.Serialize(user);
+			_sharedTenantWriterId = CreateAndPasswordAndReturnId(AddUserURITemplate, SetUserPasswordTemplat, userJson);
+			Console.WriteLine($"Shared TenantWriterId = {_sharedTenantWriterId}");
+
+			user = new IssueIdentityUser
+			{
+				id = "temp",
+				name = "testtenantadmin",
+				firstname = "admin",
+				lastname = "admin",
+				email = "tenantadmin@email.com",
+				userstatus = 0
+			};
+			userJson = JsonSerializer.Serialize(user);
+			_sharedTenantAdminId = CreateAndPasswordAndReturnId(AddUserURITemplate, SetUserPasswordTemplat, userJson);
+			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantAdminId}");
+
+			user = new IssueIdentityUser
+			{
+				id = "temp",
+				name = "testtenantreader",
+				firstname = "reader",
+				lastname = "reader",
+				email = "tenantreader@email.com",
+				userstatus = 0
+			};
+			userJson = JsonSerializer.Serialize(user);
+			_sharedTenantReaderId = CreateAndPasswordAndReturnId(AddUserURITemplate, SetUserPasswordTemplat, userJson);
+			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantReaderId}");
+
+		}
+
+		private string CreateAndPasswordAndReturnId(string AddUserURITemplate, string SetUserPasswordTemplat, string userJson)
+		{
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(userJson, AddUserURITemplate);
+			WebResponse webResponse = webRequest.GetResponse();
+			string userId = string.Empty;
+			using (var stream = webResponse.GetResponseStream())
+			{
+				StreamReader sr = new StreamReader(stream);
+				userId = sr.ReadToEnd().Replace("\"", string.Empty);
+			}
+
+			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, SetUserPasswordTemplat + $"&userId={userId}");
+			webResponse = webRequest.GetResponse();
+			using (var stream = webResponse.GetResponseStream())
+			{
+				Console.WriteLine($"Set password returned = {new StreamReader(stream).ReadToEnd()}");
+			}
+
+			return userId;
+		}
+
 		private void CreateSharedTenant()
 		{
-			string AddTenantURITemplate = $"{UriBase}/Tenant/Tenant?tenantName={_tenantName}&ownerId={_ownerId}&ownerEmail={_ownerEmail}&ownerName={_ownerName}";
+			string AddTenantURITemplate = $"{UriBase}/Tenant/Tenant?tenantName={_tenantName}&ownerId={_sharedTenantAdminId}&ownerEmail={_ownerEmail}&ownerName={_ownerName}";
 			Console.WriteLine($"Create tenant Uri:{AddTenantURITemplate}");
 
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, AddTenantURITemplate);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, AddTenantURITemplate, _adminToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
 				StreamReader sr = new StreamReader(stream);
 				_sharedTenantId = sr.ReadToEnd().Replace("\"", string.Empty);
 				Console.WriteLine($"Shared TenantId = {_sharedTenantId}");
+
+			}
+		}
+
+		private void GetAdminToken()
+		{
+			string GetTokenUriTemplate = $"{UriBase}/token?password=password";
+			Console.WriteLine($"Get token Uri:{GetTokenUriTemplate}");
+
+			IssueIdentityUser adminUser = new IssueIdentityUser
+			{
+				id= serviceadmin,
+				name="string",
+				firstname="string",
+				lastname="string",
+				email="string",
+				userstatus=0
+			};
+			string userJson = JsonSerializer.Serialize(adminUser);
+
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(userJson, GetTokenUriTemplate);
+			WebResponse webResponse = webRequest.GetResponse();
+			using (var stream = webResponse.GetResponseStream())
+			{
+				StreamReader sr = new StreamReader(stream);
+				string tempToken = sr.ReadToEnd().Replace("\"", string.Empty);
+				_adminToken = tempToken;
+				Console.WriteLine($"Shared admin token = {_adminToken}");
 
 			}
 		}
