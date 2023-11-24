@@ -2,7 +2,7 @@
   "profiles": {
     "DupIQ.IssueIdentity.ConfigureServices": {
       "commandName": "Project",
-      "commandLineArgs": "database"
+      "commandLineArgs": "serviceadmin admin admin admin admin@email.com"
     }
   }
 }

@@ -166,6 +166,11 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			tenantProfile.OwnerId = reader["OwnerId"].ToString().Trim();
 		}
 
+		private static void PopulateUserTenantProfileFromReader(TenantProfile tenantProfile, DbDataReader reader)
+		{
+			tenantProfile.TenantId = reader["TenantId"].ToString().Trim();
+		}
+
 		public void AddProjectForUser(string tenantId, string userId, string projectID)
 		{
 			_databaseHelper.AddOrUpdateProjectForUser(tenantId, projectID, userId);
@@ -251,7 +256,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 				while (reader.Read())
 				{
 					TenantProfile tenantProfile = new TenantProfile();
-					PopulateTenantProfileFromReader(tenantProfile, reader);
+					PopulateUserTenantProfileFromReader(tenantProfile, reader);
 					tenants.Add(tenantProfile);
 				}
 				return tenants.ToArray();
@@ -277,6 +282,7 @@ namespace DupIQ.IssueIdentityProviders.Sql
 				{
 					result.TenantId = reader["TenantId"].ToString().Trim();
 					result.Name = reader["Name"].ToString().Trim();
+					result.OwnerId = reader["OwnerId"].ToString().Trim();
 					break;
 				}
 				return result;

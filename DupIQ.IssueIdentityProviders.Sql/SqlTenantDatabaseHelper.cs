@@ -292,7 +292,17 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 		{
 			SqlConnection connection = GetTenantDBConnection();
 			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM TenantUsersProjects WHERE TenantId = @TenantId AND UserId = @UserId", connection))
+			using (SqlCommand command = new SqlCommand(@"
+SELECT 
+  TUP.TenantId AS TenantId,
+  TUP.ProjectId AS ProjectId,
+  TUP.UserId AS UserId,
+  TUP.Role AS Role,
+  P.OwnerId AS OwnerId,
+  P.Name AS Name
+FROM TenantUsersProjects AS TUP 
+INNER JOIN Projects AS P on TUP.TenantId = P.TenantId AND TUP.ProjectId = P.ProjectId 
+WHERE TUP.TenantId = @TenantId AND TUP.UserId = @UserId", connection))
 			{
 				command.Parameters.AddWithValue("@TenantId", tenantId);
 				command.Parameters.AddWithValue("@UserId", userId);
@@ -360,7 +370,9 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 				dataTable.Rows.Add(
 					sqlDataReader["TenantId"].ToString().Trim(),
 					sqlDataReader["ProjectId"].ToString().Trim(),
+					sqlDataReader["Name"].ToString().Trim(),
 					sqlDataReader["UserId"].ToString().Trim(),
+					sqlDataReader["OwnerId"].ToString().Trim(),
 					sqlDataReader["Role"].ToString().Trim()
 					);
 			}
@@ -405,7 +417,9 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 			DataTable dataTable = new DataTable();
 			dataTable.Columns.Add("TenantId", typeof(string));
 			dataTable.Columns.Add("ProjectId", typeof(string));
+			dataTable.Columns.Add("Name", typeof(string));
 			dataTable.Columns.Add("UserId", typeof(string));
+			dataTable.Columns.Add("OwnerId", typeof(string));
 			dataTable.Columns.Add("Role", typeof(string));
 			return dataTable;
 		}
@@ -646,8 +660,8 @@ BEGIN
     BEGIN
         -- The User already exists, update the row
         UPDATE dbo.TenantUsers
-        SET UserId = @UserId, Role = @Role
-        WHERE TenantId = @TenantId;
+        SET Role = @Role
+        WHERE TenantId = @TenantId AND UserId = @UserId;
     END
     ELSE
     BEGIN

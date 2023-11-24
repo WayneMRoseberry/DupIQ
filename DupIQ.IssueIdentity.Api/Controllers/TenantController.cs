@@ -1,5 +1,7 @@
 ﻿using DupIQ.IssueIdentity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Security.Claims;
 using System.Web.Http;
 
 namespace DupIQ.IssueIdentityAPI.Controllers
@@ -22,13 +24,29 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		[Microsoft.AspNetCore.Mvc.HttpPost("Project")]
 		public void AddProject(string tenantId, Project project)
 		{
-			GlobalConfiguration.TenantManager.AddProject(tenantId, project);
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) && 
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Writer, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity	 as ClaimsIdentity))
+				)
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				GlobalConfiguration.TenantManager.AddProject(tenantId, project);
+			}
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpGet("Projects")]
 		public IEnumerable<Project> GetProjects(string tenantId)
 		{
-			if(DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity	 as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity))
+				)
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return null;
+			}
+			if (DoesApiKeyMatchForTenant(tenantId))
 			{
 				TenantProfile tenantProfile = GlobalConfiguration.TenantManager.GetTenantProfile(tenantId);
 				return GlobalConfiguration.TenantManager.GetProjects(tenantProfile.TenantId);
@@ -39,6 +57,16 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		[Microsoft.AspNetCore.Mvc.HttpGet("ProjectsForUser")]
 		public IEnumerable<Project> GetProjectsForUser(string tenantId, string userId)
 		{
+			var identity = HttpContext.User.Identity as ClaimsIdentity;
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(identity), UserServiceAuthorization.Guest) &&
+				!CheckIfCurrentUserMatchesUserId(userId, identity) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Writer, GetHighestTenantRoleForIdentity(tenantId, identity)
+				)
+				)
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return null;
+			}
 			if (DoesApiKeyMatchForTenant(tenantId))
 			{
 				TenantProfile tenantProfile = GlobalConfiguration.TenantManager.GetTenantProfile(tenantId);
@@ -50,6 +78,13 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		[Microsoft.AspNetCore.Mvc.HttpGet("Project")]
 		public Project GetProject(string tenantId, string projectId)
 		{
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity))
+				)
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return null;
+			}
 			if (DoesApiKeyMatchForTenant(tenantId))
 			{
 				TenantProfile tenantProfile = GlobalConfiguration.TenantManager.GetTenantProfile(tenantId);
@@ -61,6 +96,11 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		[Microsoft.AspNetCore.Mvc.HttpPost("Tenant")]
 		public string AddTenant(string tenantName, string ownerId)
 		{
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest))
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return string.Empty;
+			}
 			string tenantId = System.Guid.NewGuid().ToString();
 			TenantProfile tenantProfile = new TenantProfile()
 			{
@@ -75,30 +115,58 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		[Microsoft.AspNetCore.Mvc.HttpPost("Tenant/UserAuthorization")]
 		public void AddTenantUserAuthorization(string tenantId, string userId, UserTenantAuthorization userTenantAuthorization)
 		{
-			GlobalConfiguration.TenantManager.AddUserTenantAuthorization(tenantId, userId, userTenantAuthorization);
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Developer, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity))
+				)
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				GlobalConfiguration.TenantManager.AddUserTenantAuthorization(tenantId, userId, userTenantAuthorization);
+			}
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpGet("Tenant")]
 		public TenantProfile GetTenant(string tenantId)
 		{
-			if (DoesApiKeyMatchForTenant(tenantId))
+
+			ClaimsIdentity? identity = HttpContext.User.Identity as ClaimsIdentity;
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(identity), UserServiceAuthorization.Guest) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, identity))
+				)
 			{
-				return GlobalConfiguration.TenantManager.GetTenantProfile(tenantId);
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return null;
 			}
-			return null;
+
+			return GlobalConfiguration.TenantManager.GetTenantProfile(tenantId);
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpGet]
 		public string[] GetTenants()
 		{
+			if(CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.None))
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return new string[] { };
+			}
 			return GlobalConfiguration.TenantManager.GetTenants();
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpGet("Tenant/UserAuthorization")]
 		public UserTenantAuthorization GetTenantUserAuthorization(string tenantId, string userId)
 		{
+			var identity = HttpContext.User.Identity	 as ClaimsIdentity;
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+				!CheckIfCurrentUserMatchesUserId(userId, identity) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Writer, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity))
+				)
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+				return UserTenantAuthorization.None;
+			}
 			return GlobalConfiguration.TenantManager.GetUserTenantAuthorization(tenantId, userId);
 		}
-
 	}
 }
