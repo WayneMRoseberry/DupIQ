@@ -737,50 +737,33 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 		private void CreateSharedUsers()
 		{
-			string AddUserURITemplate = $"{UriBase}/IssueIdentityUser";
-			string SetUserPasswordTemplat = $"{UriBase}/IssueIdentityUser/password?password=password";
-			Console.WriteLine($"Create user Uri:{AddUserURITemplate}");
 
-			IssueIdentityUser user = new IssueIdentityUser
+			_sharedTenantWriterId = CreateSharedUserWithName("testtenantwriter_"+System.Guid.NewGuid().ToString());
+			Console.WriteLine($"Shared TenantWriterId = {_sharedTenantWriterId}");
+			_sharedTenantAdminId = CreateSharedUserWithName("testtenantadmin_" + System.Guid.NewGuid().ToString());
+			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantAdminId}");
+			_sharedTenantReaderId = CreateSharedUserWithName("testtenantreader_" + System.Guid.NewGuid().ToString());
+			Console.WriteLine($"Shared TenantReaderId = {_sharedTenantReaderId}");
+		}
+
+		private string CreateSharedUserWithName(string userName)
+		{
+			string AddUserURITemplate1 = $"{UriBase}/IssueIdentityUser";
+			string SetUserPasswordTemplat1 = $"{UriBase}/IssueIdentityUser/password?password=password";
+			Console.WriteLine($"Create user Uri:{AddUserURITemplate1}");
+			IssueIdentityUser user1 = new IssueIdentityUser
 			{
 				id = "temp",
-				name = "testtenantwriter",
+				name = userName,
 				firstname = "writer",
 				lastname = "writer",
 				email = "tenantwriter@email.com",
 				userstatus = 0
 			};
 
-			string userJson = JsonSerializer.Serialize(user);
-			_sharedTenantWriterId = CreateAndPasswordAndReturnId(AddUserURITemplate, SetUserPasswordTemplat, userJson);
-			Console.WriteLine($"Shared TenantWriterId = {_sharedTenantWriterId}");
-
-			user = new IssueIdentityUser
-			{
-				id = "temp",
-				name = "testtenantadmin",
-				firstname = "admin",
-				lastname = "admin",
-				email = "tenantadmin@email.com",
-				userstatus = 0
-			};
-			userJson = JsonSerializer.Serialize(user);
-			_sharedTenantAdminId = CreateAndPasswordAndReturnId(AddUserURITemplate, SetUserPasswordTemplat, userJson);
-			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantAdminId}");
-
-			user = new IssueIdentityUser
-			{
-				id = "temp",
-				name = "testtenantreader",
-				firstname = "reader",
-				lastname = "reader",
-				email = "tenantreader@email.com",
-				userstatus = 0
-			};
-			userJson = JsonSerializer.Serialize(user);
-			_sharedTenantReaderId = CreateAndPasswordAndReturnId(AddUserURITemplate, SetUserPasswordTemplat, userJson);
-			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantReaderId}");
-
+			string userJson1 = JsonSerializer.Serialize(user1);
+			string userId = CreateAndPasswordAndReturnId(AddUserURITemplate1, SetUserPasswordTemplat1, userJson1);
+			return userId;
 		}
 
 		private string CreateAndPasswordAndReturnId(string AddUserURITemplate, string SetUserPasswordTemplat, string userJson)
@@ -863,6 +846,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		{
 			string GetTokenUriTemplate = $"{UriBase}/token?password=password";
 			Console.WriteLine($"Get token Uri:{GetTokenUriTemplate}");
+			Console.WriteLine($"Get claim for userid:{userId}");
 			IssueIdentityUser user = new IssueIdentityUser
 			{
 				id = userId,
