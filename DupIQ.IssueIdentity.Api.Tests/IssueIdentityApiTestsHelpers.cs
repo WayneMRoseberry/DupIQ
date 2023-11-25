@@ -76,24 +76,28 @@ internal static class IssueIdentityApiTestsHelpers
 		return $"{uriBase}/IssueReports/Report?tenantId={_sharedTenantId1}&projectId={_sharedProjectId1}";
 	}
 
-		static internal HttpWebRequest CreateDeleteRequest(string requestUri)
+		static internal HttpWebRequest CreateDeleteRequest(string requestUri, string token="")
 		{
 			var request = (HttpWebRequest)WebRequest.Create(requestUri);
 			request.Method = "DELETE";
+			request.PreAuthenticate = true;
 			request.ContentType = "application/json";
 			request.Headers.Add("Access-Control-Allow-Origin", "*");
+			request.Headers.Add("Authorization", "Bearer " + token);
 
-			return request;
+		return request;
 		}
 
-		static internal HttpWebRequest CreateGetRequest(string requestUri)
+		static internal HttpWebRequest CreateGetRequest(string requestUri, string token="")
 		{
 			var request = (HttpWebRequest)WebRequest.Create(requestUri);
-			request.Method = "GET";
+			request.Method = "GET"; 
+			request.PreAuthenticate = true;
 			request.ContentType = "application/json";
 			request.Headers.Add("Access-Control-Allow-Origin", "*");
+			request.Headers.Add("Authorization", "Bearer " + token);
 
-			return request;
+		return request;
 		}
 
 		static internal HttpWebRequest CreatePostRequest(string postBody, string requestUri, string token="")
