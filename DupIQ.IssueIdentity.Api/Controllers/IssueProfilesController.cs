@@ -11,6 +11,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 	/// An IssueProfile is a description of an issue that has been reported at least once. Specific occurrences
 	/// off IssueProfiles are reporited via IssueReport(s).
 	/// </summary>
+	[Microsoft.AspNetCore.Authorization.Authorize]
 	[Microsoft.AspNetCore.Mvc.Route("[controller]")]
 	[ApiController]
 	//[ApiKey]

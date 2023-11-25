@@ -8,6 +8,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 	/// <summary>
 	/// Allows creation and retrieval of IssueReports. An IssueReport is an instance of an issue occurring.
 	/// </summary>
+	[Microsoft.AspNetCore.Authorization.Authorize]
 	[Route("[controller]")]
 	[ApiController]
 	public class IssueReportsController : IssueIdentityControllerBaseClass

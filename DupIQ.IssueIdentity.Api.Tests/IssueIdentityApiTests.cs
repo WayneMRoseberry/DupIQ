@@ -58,20 +58,20 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 
 			string deleteUserRequestUriTemplate = $"{UriBase}/IssueIdentityUser?userId=";
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate+_sharedTenantAdminId);
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate+_sharedTenantAdminId, _adminToken);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string responseBody = responseReader.ReadToEnd();
 			}
 
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantReaderId);
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantReaderId, _adminToken);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string responseBody = responseReader.ReadToEnd();
 			}
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantWriterId);
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantWriterId, _adminToken);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{

@@ -81,7 +81,24 @@ namespace DupIQ.IssueIdentityProviders.Sql
 			{
 				command.Parameters.AddWithValue("@UserId", userId);
 				SqlDataReader reader = command.ExecuteReader();
-				return reader;
+
+				DataTable dataTable = new DataTable();
+				dataTable.Columns.Add(new DataColumn("UserId", typeof(string)));
+				dataTable.Columns.Add(new DataColumn("UserName", typeof(string)));
+				dataTable.Columns.Add(new DataColumn("FirstName", typeof(string)));
+				dataTable.Columns.Add(new DataColumn("LastName", typeof(string)));
+				dataTable.Columns.Add(new DataColumn("Email", typeof(string)));
+
+				while(reader.Read())
+				{
+					dataTable.Rows.Add(reader["UserId"].ToString().Trim(),
+						reader["UserName"].ToString().Trim(),
+						reader["FirstName"].ToString().Trim(),
+						reader["LastName"].ToString().Trim(),
+						reader["Email"].ToString().Trim());
+				}
+
+				return dataTable.CreateDataReader();
 			}
 		}
 

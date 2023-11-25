@@ -229,47 +229,51 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 		public Project GetProject(string tenantId, string projectId)
 		{
 			Project result = new Project();
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM Projects WHERE TenantId = @TenantId AND ProjectId = @ProjectId", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@ProjectId", projectId);
-				SqlDataReader sqlDataReader = command.ExecuteReader();
-				while (sqlDataReader.Read())
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM Projects WHERE TenantId = @TenantId AND ProjectId = @ProjectId", connection))
 				{
-					result.TenantId = sqlDataReader["TenantId"].ToString().Trim();
-					result.Name = sqlDataReader["Name"].ToString().Trim();
-					result.ProjectId = sqlDataReader["ProjectId"].ToString().Trim();
-					result.OwnerId = sqlDataReader["OwnerId"].ToString().Trim();
-					float sim = 0.0f;
-					if (float.TryParse(sqlDataReader["SimilarityThreshold"].ToString().Trim(), out sim))
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@ProjectId", projectId);
+					SqlDataReader sqlDataReader = command.ExecuteReader();
+					while (sqlDataReader.Read())
 					{
-						result.SimilarityThreshold = sim;
-					};
+						result.TenantId = sqlDataReader["TenantId"].ToString().Trim();
+						result.Name = sqlDataReader["Name"].ToString().Trim();
+						result.ProjectId = sqlDataReader["ProjectId"].ToString().Trim();
+						result.OwnerId = sqlDataReader["OwnerId"].ToString().Trim();
+						float sim = 0.0f;
+						if (float.TryParse(sqlDataReader["SimilarityThreshold"].ToString().Trim(), out sim))
+						{
+							result.SimilarityThreshold = sim;
+						};
+					}
+					connection.Close();
+					return result;
 				}
-				connection.Close();
-				return result;
 			}
 		}
 
 		public PropStuffer GetProjectExtendedProperties(string tenantId, string projectId)
 		{
 			PropStuffer result = null;
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM ProjectsExtendedProperties WHERE TenantId = @tenantId AND ProjectId = @projectId", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@tenantId", tenantId);
-				command.Parameters.AddWithValue("@projectId", projectId);
-				SqlDataReader sqlDataReader = command.ExecuteReader();
-				while (sqlDataReader.Read())
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM ProjectsExtendedProperties WHERE TenantId = @tenantId AND ProjectId = @projectId", connection))
 				{
-					string propStuffBlob = sqlDataReader["PropertyJson"].ToString().Trim();
-					result = JsonSerializer.Deserialize<PropStuffer>(propStuffBlob);
+					command.Parameters.AddWithValue("@tenantId", tenantId);
+					command.Parameters.AddWithValue("@projectId", projectId);
+					SqlDataReader sqlDataReader = command.ExecuteReader();
+					while (sqlDataReader.Read())
+					{
+						string propStuffBlob = sqlDataReader["PropertyJson"].ToString().Trim();
+						result = JsonSerializer.Deserialize<PropStuffer>(propStuffBlob);
+					}
+					connection.Close();
+					return result;
 				}
-				connection.Close();
-				return result;
 			}
 		}
 
@@ -290,24 +294,27 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 
 		public DbDataReader GetProjects(string tenantId, string userId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand(@"
-SELECT 
-  TUP.TenantId AS TenantId,
-  TUP.ProjectId AS ProjectId,
-  TUP.UserId AS UserId,
-  TUP.Role AS Role,
-  P.OwnerId AS OwnerId,
-  P.Name AS Name
-FROM TenantUsersProjects AS TUP 
-INNER JOIN Projects AS P on TUP.TenantId = P.TenantId AND TUP.ProjectId = P.ProjectId 
-WHERE TUP.TenantId = @TenantId AND TUP.UserId = @UserId", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				command.Parameters.AddWithValue("@UserId", userId);
-				return ExecuteProjectUsersQueryAndReturnDataReader(command);
+					connection.Open();
+				using (SqlCommand command = new SqlCommand(@"
+	SELECT 
+	  TUP.TenantId AS TenantId,
+	  TUP.ProjectId AS ProjectId,
+	  TUP.UserId AS UserId,
+	  TUP.Role AS Role,
+	  P.OwnerId AS OwnerId,
+	  P.Name AS Name
+	FROM TenantUsersProjects AS TUP 
+	INNER JOIN Projects AS P on TUP.TenantId = P.TenantId AND TUP.ProjectId = P.ProjectId 
+	WHERE TUP.TenantId = @TenantId AND TUP.UserId = @UserId", connection))
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					command.Parameters.AddWithValue("@UserId", userId);
+					return ExecuteProjectUsersQueryAndReturnDataReader(command);
+				}
 			}
+
 		}
 
 		private static DbDataReader ExecuteProjectUsersQueryAndReturnDataReader(SqlCommand command)
@@ -466,22 +473,26 @@ WHERE TUP.TenantId = @TenantId AND TUP.UserId = @UserId", connection))
 
 		public DbDataReader GetTenantProfile(string tenantId)
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM Tenants WHERE TenantId = @TenantId", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				command.Parameters.AddWithValue("@TenantId", tenantId);
-				return ExecuteTenantQueryAndReturnDataReader(command);
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM Tenants WHERE TenantId = @TenantId", connection))
+				{
+					command.Parameters.AddWithValue("@TenantId", tenantId);
+					return ExecuteTenantQueryAndReturnDataReader(command);
+				}
 			}
 		}
 
 		public DbDataReader GetTenants()
 		{
-			SqlConnection connection = GetTenantDBConnection();
-			connection.Open();
-			using (SqlCommand command = new SqlCommand("SELECT * FROM Tenants", connection))
+			using (SqlConnection connection = GetTenantDBConnection())
 			{
-				return ExecuteTenantQueryAndReturnDataReader(command);
+				connection.Open();
+				using (SqlCommand command = new SqlCommand("SELECT * FROM Tenants", connection))
+				{
+					return ExecuteTenantQueryAndReturnDataReader(command);
+				}
 			}
 		}
 
