@@ -17,6 +17,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		private string _sharedTenantAdminId = string.Empty;
 		private string _sharedTenantReaderId = string.Empty;
 		private string _adminToken = string.Empty;
+		private string _tenantAdminToken = string.Empty;
+		private string _tenantWriterToken = string.Empty;
+		private string _tenantReaderToken = string.Empty;
 
 		string _tenantName = "test_tenant";
 		string _ownerId = "user1";
@@ -31,6 +34,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			InitializeFromConfig();
 			GetAdminToken();
 			CreateSharedUsers();
+			GetSharedUsersTokens();
 			CreateSharedTenant();
 			CreateSharedProject();
 		}
@@ -719,6 +723,46 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Console.WriteLine($"Shared admin token = {_adminToken}");
 
 			}
+		}
+
+		private void GetSharedUsersTokens()
+		{
+
+			_tenantAdminToken = GetClaimForUserId(_sharedTenantAdminId);
+			Console.WriteLine($"Shared tenant admin token = {_tenantAdminToken}");
+			_tenantWriterToken = GetClaimForUserId(_sharedTenantWriterId);
+			Console.WriteLine($"Shared tenant writer token = {_tenantWriterToken}");
+			_tenantReaderToken = GetClaimForUserId(_sharedTenantReaderId);
+			Console.WriteLine($"Shared tenant reader token = {_tenantReaderToken}");
+		}
+
+		private string GetClaimForUserId(string userId)
+		{
+			string GetTokenUriTemplate = $"{UriBase}/token?password=password";
+			Console.WriteLine($"Get token Uri:{GetTokenUriTemplate}");
+			IssueIdentityUser user = new IssueIdentityUser
+			{
+				id = userId,
+				name = "string",
+				firstname = "string",
+				lastname = "string",
+				email = "string",
+				userstatus = 0
+			};
+			string userJson = JsonSerializer.Serialize(user);
+
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(userJson, GetTokenUriTemplate, _adminToken);
+			WebResponse webResponse = webRequest.GetResponse();
+			string token = string.Empty;
+			using (var stream = webResponse.GetResponseStream())
+			{
+				StreamReader sr = new StreamReader(stream);
+				string tempToken = sr.ReadToEnd().Replace("\"", string.Empty);
+				token = tempToken;
+
+			}
+
+			return token;
 		}
 
 		private void InitializeFromConfig()
