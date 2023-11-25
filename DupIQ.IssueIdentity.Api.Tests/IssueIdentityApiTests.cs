@@ -7,11 +7,11 @@ namespace DupIQ.IssueIdentity.Api.Tests
 {
 	[TestClass]
 	public class IssueIdentityApiTests
-	{	
+	{
 		// this changes every time the database is paved or service admin reset
 		// need to move it somewhere that is not compiled or shared
-		private const string serviceadmin = "f8363ebd-8dc3-4bc3-b00c-fbd1c2aec89a"; 
-		private string UriBase = "http://localhost:5000";
+		private string _serviceadmin = string.Empty;
+		private string UriBase = string.Empty;
 		private string _sharedTenantId = string.Empty;
 		private string _sharedTenantWriterId = string.Empty;
 		private string _sharedTenantAdminId = string.Empty;
@@ -700,7 +700,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 			IssueIdentityUser adminUser = new IssueIdentityUser
 			{
-				id= serviceadmin,
+				id= _serviceadmin,
 				name="string",
 				firstname="string",
 				lastname="string",
@@ -726,8 +726,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string testConfigText = System.IO.File.ReadAllText("testconfig.json");
 			var testConfigJson = JsonSerializer.Deserialize<JsonElement>(testConfigText);
 
-			UriBase = testConfigJson.GetProperty("testserverbaseuri").GetString();
-			Console.WriteLine($"UriBase:{UriBase}");
+			UriBase = testConfigJson.GetProperty("testserverbaseuri").GetString(); 
+			_serviceadmin = testConfigJson.GetProperty("serviceadminid").GetString();
+			Console.WriteLine($"UriBase:{UriBase}, ServiceAdmin: {_serviceadmin}");
 		}
 	}
 }

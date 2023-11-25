@@ -1,3 +1,4 @@
 {
-  "testserverbaseuri": "http://localhost:5000"
+  "testserverbaseuri": "http://localhost:5000",
+  "serviceadminid": "f8363ebd-8dc3-4bc3-b00c-fbd1c2aec89a"
 }
