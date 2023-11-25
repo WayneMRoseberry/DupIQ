@@ -108,7 +108,6 @@ internal static class IssueIdentityApiTestsHelpers
 			request.ContentType = "application/json";
 			request.Headers.Add("Access-Control-Allow-Origin", "*");
 			request.Headers.Add("Authorization", "Bearer " + token);
-			Console.WriteLine("writing to request stream");
 			using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
 			{
 				writer.Write(postBody);

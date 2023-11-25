@@ -87,11 +87,30 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		[TestMethod]
 		public void GET_ReportIssue()
 		{
+			string userToken = _adminToken;
+			GetReportIssueForUserToken(userToken);
+		}
+
+		[TestMethod]
+		public void GET_ReportIssue_allroles()
+		{
+			Console.WriteLine("Check with tenant admin token.");
+			GetReportIssueForUserToken(_tenantAdminToken);
+			Console.WriteLine("Check with tenant writer token.");
+			GetReportIssueForUserToken(_tenantWriterToken);
+			// this test was written before enforcing readonly on readers. The next step will fail when that
+			// change is implemented.
+			Console.WriteLine("Check with tenant reader token.");
+			GetReportIssueForUserToken(_tenantReaderToken);
+		}
+
+		private void GetReportIssueForUserToken(string userToken)
+		{
 			string testMessage = "somethingnew";
 
 			string requestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, _sharedTenantId, _sharedProjectId);
 
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(requestUri, _adminToken);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(requestUri, userToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -153,12 +172,92 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
+		public void GET_IssueReport_eachrole()
+		{
+			Console.WriteLine("Check with tenant admin token.");
+			CheckIssueReportWithUserToken(_tenantAdminToken); 
+			Console.WriteLine("Check with tenant writer token.");
+			CheckIssueReportWithUserToken(_tenantWriterToken);
+			// this test was written before change was made so that only writers
+			// and above could report issues. The next step will fail when that
+			// change is implemented.
+			Console.WriteLine("Check with tenant reader token.");
+			CheckIssueReportWithUserToken(_tenantReaderToken);
+		}
+
+		private void CheckIssueReportWithUserToken(string userToken)
+		{
+			string testMessage = "somethingnew";
+
+			string issueReportGetRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, _sharedTenantId, _sharedProjectId);
+
+			Console.WriteLine("First report the issue.");
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportGetRequestUri, userToken);
+			WebResponse webResponse = webRequest.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				issueId = issueProfileResponse.issueId;
+				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
+				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
+			}
+
+			string relatedIssueReportsGetRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsGetRequestUri(issueId, UriBase, _sharedTenantId, _sharedProjectId);
+			Console.WriteLine("Then get the related issue report id back from the issueId we got on the report.");
+			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetRequestUri, userToken);
+			webResponse = webRequest.GetResponse();
+			string instanceId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var relatedIssueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
+				Assert.AreEqual(1, relatedIssueReportsResponse.Count(), "Fail if there is any other quantity than one IssueReport related to the issue profile.");
+				instanceId = relatedIssueReportsResponse[0].instanceId;
+			}
+
+			Console.WriteLine("Use the instanceId to retrieve the IssueReport.");
+			string issueReportsGetIssueReportRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportGetRequestUri(instanceId, UriBase, _sharedTenantId, _sharedProjectId);
+			Console.WriteLine($"get issuereport uri: {issueReportsGetIssueReportRequestUri}");
+			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportsGetIssueReportRequestUri, userToken);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var returnedIssueReport = JsonSerializer.Deserialize<IssueReport>(response);
+				Assert.AreEqual(instanceId, returnedIssueReport.instanceId, "Fail if we did not get the IssueReport we were looking for.");
+			}
+		}
+
+		[TestMethod]
 		public void POST_IssueProfile()
+		{
+			CheckPostIssueProfileWithUserToken(_adminToken);
+		}
+
+		[TestMethod]
+		public void POST_IssueProfile_allroles()
+		{
+			Console.WriteLine("Check with tenant admin token.");
+			CheckPostIssueProfileWithUserToken(_tenantAdminToken);
+			Console.WriteLine("Check with tenant writer token.");
+			CheckPostIssueProfileWithUserToken(_tenantWriterToken);
+			// this test was written before enforcing readonly on readers. The next step will fail when that
+			// change is implemented.
+			Console.WriteLine("Check with tenant reader token.");
+			CheckPostIssueProfileWithUserToken(_tenantReaderToken);
+		}
+
+		private void CheckPostIssueProfileWithUserToken(string userToken)
 		{
 			Console.WriteLine("Get existing list of issue profiles.");
 			string getIssueProfilesUri = $"{UriBase}/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 			IssueProfile[] existingIssueProfiles;
-			HttpWebRequest getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, _adminToken);
+			HttpWebRequest getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, userToken);
 			var webResponse = getIssueProfilesRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -168,7 +267,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 
 			Console.WriteLine("Create a new issue profile.");
-			string testIssueId = "testissueid";
+			string testIssueId = "testissueid_" + System.Guid.NewGuid().ToString();
 			IssueProfile issueProfile = new IssueProfile()
 			{
 				exampleMessage = "test message",
@@ -181,14 +280,14 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string postBody = JsonSerializer.Serialize(issueProfile);
 
 			string postIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueProfileUri, _adminToken);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueProfileUri, userToken);
 
 			webResponse = request.GetResponse();
 
 			Console.WriteLine("Check list of issue profiles after creating new issue profile.");
 
 			IssueProfile[] newIssueProfilesList;
-			getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, _adminToken);
+			getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, userToken);
 			webResponse = getIssueProfilesRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -202,7 +301,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Console.WriteLine("Check if getting issue profile returns what we expected.");
 			var getIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?issueId={testIssueId}&tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
 			Console.WriteLine($"uri={getIssueProfileUri}");
-			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfileUri, _adminToken);
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfileUri, userToken);
 			webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -292,20 +391,44 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		[TestMethod]
 		public void POST_ReportIssues()
 		{
+			CheckPostReportIssuesForUserToken(_adminToken);
+		}
+
+		[TestMethod]
+		public void POST_ReportIssues_allroles()
+		{
+			Console.WriteLine("Check with tenant admin token.");
+			CheckPostReportIssuesForUserToken(_tenantAdminToken, "a new string for admin tenants to post");
+			Console.WriteLine("Check with tenant writer token.");
+			CheckPostReportIssuesForUserToken(_tenantWriterToken, "writers on a given tenant might post this string");
+			// this test was written before enforcing readonly on readers. The next step will fail when that
+			// change is implemented.
+			Console.WriteLine("Check with tenant reader token.");
+			CheckPostReportIssuesForUserToken(_tenantReaderToken, "really a reader should not be able to post anything");
+		}
+
+		private void CheckPostReportIssuesForUserToken(string userToken)
+		{
+			const string issueString = "this is a test";
+			CheckPostReportIssuesForUserToken(userToken, issueString);
+		}
+
+		private void CheckPostReportIssuesForUserToken(string userToken, string issueString)
+		{
 			IssueReport[] issueReports = new IssueReport[] {
 				new IssueReport()
 				{
 					instanceId = "testinstance1",
 					issueId = "changes",
 					issueDate = DateTime.Now,
-					issueMessage = "this is a test"
+					issueMessage = issueString
 				},
 				new IssueReport()
 				{
 					instanceId = "testinstance2",
 					issueId = "changes",
 					issueDate = DateTime.Now,
-					issueMessage = "this is a test"
+					issueMessage = issueString
 				}
 			};
 			string postBody = JsonSerializer.Serialize(issueReports);
@@ -316,7 +439,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsPostRequestUri(uriBase, _sharedTenantId1, _sharedProjectId1);
 			Console.WriteLine("Create array of issueReports.");
 			Console.WriteLine($"POST to: {requestUri}");
-			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, _adminToken);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, userToken);
 
 			var webResponse = request.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
