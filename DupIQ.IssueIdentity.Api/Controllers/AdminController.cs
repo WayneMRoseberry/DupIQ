@@ -8,6 +8,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 	/// <summary>
 	/// Provides administrative support to the service.
 	/// </summary>
+	[Microsoft.AspNetCore.Authorization.Authorize]
 	[Route("[controller]")]
 	[ApiController]
 	public class AdminController : IssueIdentityControllerBaseClass
