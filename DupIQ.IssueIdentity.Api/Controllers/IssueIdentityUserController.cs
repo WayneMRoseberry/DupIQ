@@ -5,9 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DupIQ.IssueIdentityAPI.Controllers
 {
+	[Microsoft.AspNetCore.Authorization.Authorize]
 	[Microsoft.AspNetCore.Mvc.Route("[controller]")]
 	[ApiController]
 	public class IssueIdentityUserController : IssueIdentityControllerBaseClass
@@ -50,6 +52,7 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 			GlobalConfiguration.UserManager.DeleteUser(userId);
 		}
 
+		[AllowAnonymous]
 		[Microsoft.AspNetCore.Mvc.HttpPost("/token")]
 		public IActionResult GetToken([FromBody]IssueIdentityUser user, string password)
 		{

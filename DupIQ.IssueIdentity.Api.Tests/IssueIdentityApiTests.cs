@@ -667,7 +667,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				userId = sr.ReadToEnd().Replace("\"", string.Empty);
 			}
 
-			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, SetUserPasswordTemplat + $"&userId={userId}");
+			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, SetUserPasswordTemplat + $"&userId={userId}", _adminToken);
 			webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
