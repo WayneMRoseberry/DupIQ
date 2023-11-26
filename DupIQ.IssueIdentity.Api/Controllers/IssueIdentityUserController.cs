@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using System.Net;
 
 namespace DupIQ.IssueIdentityAPI.Controllers
 {
@@ -25,30 +26,60 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		[Microsoft.AspNetCore.Mvc.HttpGet]
 		public IssueIdentityUser Get(string userId)
 		{
-			return GlobalConfiguration.UserManager.GetUserById(userId);
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest))
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				return GlobalConfiguration.UserManager.GetUserById(userId);
+			}
+			return null;
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpPost]
 		public string AddUser(IssueIdentityUser user)
 		{
-			return GlobalConfiguration.UserManager.AddOrUpdateUser(user);
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest))
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				return GlobalConfiguration.UserManager.AddOrUpdateUser(user);
+			}
+			return string.Empty;
 
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpPost("password")]
 		public void SetPassword(string userId,string password)
 		{
-			IssueIdentityUser user = GlobalConfiguration.UserManager.GetUserById(userId);
-			PasswordHasher<IssueIdentityUser> passwordHasher = new PasswordHasher<IssueIdentityUser>();
-			string hashedPassword = passwordHasher.HashPassword(user, password);
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest))
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				IssueIdentityUser user = GlobalConfiguration.UserManager.GetUserById(userId);
+				PasswordHasher<IssueIdentityUser> passwordHasher = new PasswordHasher<IssueIdentityUser>();
+				string hashedPassword = passwordHasher.HashPassword(user, password);
 
-			GlobalConfiguration.UserManager.AddOrUpdateUserPasswordHash(userId, hashedPassword);
+				GlobalConfiguration.UserManager.AddOrUpdateUserPasswordHash(userId, hashedPassword);
+			}
 		}
 
 		[Microsoft.AspNetCore.Mvc.HttpDelete]
 		public void DeleteUser(string userId)
 		{
-			GlobalConfiguration.UserManager.DeleteUser(userId);
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest))
+			{
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				GlobalConfiguration.UserManager.DeleteUser(userId);
+			}
 		}
 
 		[AllowAnonymous]
