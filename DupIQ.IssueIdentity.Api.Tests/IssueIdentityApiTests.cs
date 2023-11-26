@@ -247,14 +247,19 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
-		public void POST_IssueProfile_allroles()
+		public void POST_IssueProfile_allwriteableroles()
 		{
 			Console.WriteLine("Check with tenant admin token.");
 			CheckPostIssueProfileWithUserToken(_tenantAdminToken);
 			Console.WriteLine("Check with tenant writer token.");
 			CheckPostIssueProfileWithUserToken(_tenantWriterToken);
-			// this test was written before enforcing readonly on readers. The next step will fail when that
-			// change is implemented.
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void POST_IssueProfile_reader_shouldtrown()
+		{
+
 			Console.WriteLine("Check with tenant reader token.");
 			CheckPostIssueProfileWithUserToken(_tenantReaderToken);
 		}
