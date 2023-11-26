@@ -99,9 +99,17 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public IssueProfile Post([FromBody] IssueReport value, string tenantId, string projectId)
 		{
 			logger.LogInformation("Post ReportIssue. tenantId:{tenantId}", tenantId);
-			if (DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+	CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity)))
 			{
-				return GlobalConfiguration.Repository.ReportIssue(value, tenantId, projectId);
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				if (DoesApiKeyMatchForTenant(tenantId))
+				{
+					return GlobalConfiguration.Repository.ReportIssue(value, tenantId, projectId);
+				}
 			}
 			return null;
 		}
@@ -116,16 +124,23 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public IssueProfile[] PostMultiple([FromBody] IssueReport[] values, string tenantId, string projectId)
 		{
 			logger.LogInformation("Post ReportIssues. tenantId:{tenantId}", tenantId);
-
-
-			if (DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+	CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity)))
 			{
-				List<IssueProfile> profiles = new List<IssueProfile>();
-				foreach (IssueReport value in values)
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+
+				if (DoesApiKeyMatchForTenant(tenantId))
 				{
-					profiles.Add(GlobalConfiguration.Repository.ReportIssue(value, tenantId, projectId));
+					List<IssueProfile> profiles = new List<IssueProfile>();
+					foreach (IssueReport value in values)
+					{
+						profiles.Add(GlobalConfiguration.Repository.ReportIssue(value, tenantId, projectId));
+					}
+					return profiles.ToArray();
 				}
-				return profiles.ToArray();
 			}
 			return null;
 		}
@@ -139,10 +154,18 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public void Delete(string instanceId, string tenantId, string projectId)
 		{
 			logger.LogInformation("Delete IssueReport. instanceId={instanceId}, tenantid={tenantId}", instanceId, tenantId);
-			if (DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+	CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity)))
 			{
-				GlobalConfiguration.Repository.DeleteIssueReport(instanceId, tenantId, projectId);
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				if (DoesApiKeyMatchForTenant(tenantId))
+				{
+					GlobalConfiguration.Repository.DeleteIssueReport(instanceId, tenantId, projectId);
 
+				}
 			}
 		}
 	}

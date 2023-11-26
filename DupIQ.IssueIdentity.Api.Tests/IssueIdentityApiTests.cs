@@ -408,8 +408,12 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			CheckPostReportIssuesForUserToken(_tenantAdminToken, "a new string for admin tenants to post");
 			Console.WriteLine("Check with tenant writer token.");
 			CheckPostReportIssuesForUserToken(_tenantWriterToken, "writers on a given tenant might post this string");
-			// this test was written before enforcing readonly on readers. The next step will fail when that
-			// change is implemented.
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void POST_ReportIssues_reader()
+		{
 			Console.WriteLine("Check with tenant reader token.");
 			CheckPostReportIssuesForUserToken(_tenantReaderToken, "really a reader should not be able to post anything");
 		}
