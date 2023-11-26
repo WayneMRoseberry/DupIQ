@@ -1,5 +1,7 @@
 ﻿using DupIQ.IssueIdentity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -66,16 +68,25 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public IssueProfile ReportIssue(string message, string tenantId, string projectId)
 		{
 			logger.LogInformation("ReportIssue. tenantId:{tenantId}", tenantId);
-			if (DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.Guest) &&
+				CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.Reader, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity)))
 			{
-				IssueReport issueReport = new IssueReport()
-				{
-					IssueMessage = message,
-					InstanceId = Guid.NewGuid().ToString(),
-					IssueDate = DateTime.Now
-				};
-				return GlobalConfiguration.Repository.ReportIssue(issueReport, tenantId, projectId);
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 			}
+			else
+			{
+				if (DoesApiKeyMatchForTenant(tenantId))
+				{
+					IssueReport issueReport = new IssueReport()
+					{
+						IssueMessage = message,
+						InstanceId = Guid.NewGuid().ToString(),
+						IssueDate = DateTime.Now
+					};
+					return GlobalConfiguration.Repository.ReportIssue(issueReport, tenantId, projectId);
+				}
+			}
+
 			return null;
 		}
 

@@ -349,12 +349,14 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 
 		private static DbDataReader ExecuteTenantUsersQueryAndReturnDataReader(SqlCommand command)
 		{
-			SqlDataReader sqlDataReader = command.ExecuteReader();
-			DataTable dataTable = CreateTenantUsersDataTabe();
+			using (SqlDataReader sqlDataReader = command.ExecuteReader())
+			{
+				DataTable dataTable = CreateTenantUsersDataTabe();
 
-			AddReaderRowToTenantUsersTable(sqlDataReader, dataTable);
+				AddReaderRowToTenantUsersTable(sqlDataReader, dataTable);
 
-			return dataTable.CreateDataReader();
+				return dataTable.CreateDataReader();
+			}
 		}
 
 		private static void AddReaderRowToProjectTable(SqlDataReader sqlDataReader, DataTable dataTable)
@@ -507,7 +509,6 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 					return ExecuteTenantUsersQueryAndReturnDataReader(command);
 				}			
 			}
-
 		}
 
 		public DbDataReader GetUserServiceAuthorization(string userId)
@@ -524,7 +525,8 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 					SqlDataReader sqlDataReader = command.ExecuteReader();
 					while(sqlDataReader.Read())
 					{
-						dataTable.Rows.Add(sqlDataReader["Role"].ToString().Trim());
+						string role = sqlDataReader["Role"].ToString().Trim();
+						dataTable.Rows.Add(role);
 					}
 					return dataTable.CreateDataReader();
 				}
@@ -552,7 +554,6 @@ DELETE FROM ProjectsExtendedProperties WHERE TenantId = @TenantId", connection))
 					return dataTable.CreateDataReader();
 				}
 			}
-
 		}
 
 		public void PurgeTenants(bool purgeDependencies)

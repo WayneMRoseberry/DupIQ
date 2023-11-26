@@ -100,7 +100,7 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 		{
 			SqlTenantDatabaseHelper sqlTenantDatabaseHelper = new SqlTenantDatabaseHelper(SqlConfig);
 
-			DbDataReader reader = sqlTenantDatabaseHelper.GetUserServiceAuthorization("user1");
+			DbDataReader reader = sqlTenantDatabaseHelper.GetUserServiceAuthorization("nonexistentuser");
 			Assert.IsNotNull(reader);
 			int recordCount = 0;
 			while (reader.Read())

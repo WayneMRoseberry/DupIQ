@@ -34,16 +34,16 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			InitializeFromConfig();
 			GetAdminToken();
 			CreateSharedUsers();
-			GetSharedUsersTokens();
 			CreateSharedTenant();
 			CreateSharedProject();
+			GetSharedUsersTokens();
 		}
 
 		[TestCleanup]
 		public void Cleanup()
 		{
 			string deleteAllRecordsRequestUri = IssueIdentityApiTestsHelpers.BuildDeleteAllRecordsRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
-
+			
 			HttpWebRequest webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllRecordsRequestUri, _adminToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -52,7 +52,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Console.WriteLine($"Response to delete all records: {responseBody}");
 			}
 			string deleteAllTenantsRequestUri = IssueIdentityApiTestsHelpers.BuildDeleteAllTenantsRequestUri(UriBase);
-
+			
 			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllTenantsRequestUri, _adminToken);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -60,7 +60,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				string responseBody = responseReader.ReadToEnd();
 				Console.WriteLine($"Response to delete all tenants: {responseBody}");
 			}
-
+			
 			string deleteUserRequestUriTemplate = $"{UriBase}/IssueIdentityUser?userId=";
 			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate+_sharedTenantAdminId, _adminToken);
 			webResponse = webRequest.GetResponse();
@@ -68,7 +68,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			{
 				string responseBody = responseReader.ReadToEnd();
 			}
-
+			
 			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantReaderId, _adminToken);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
@@ -98,8 +98,12 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			GetReportIssueForUserToken(_tenantAdminToken);
 			Console.WriteLine("Check with tenant writer token.");
 			GetReportIssueForUserToken(_tenantWriterToken);
-			// this test was written before enforcing readonly on readers. The next step will fail when that
-			// change is implemented.
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void GET_ReportIssue_reader_shouldthrow()
+		{
 			Console.WriteLine("Check with tenant reader token.");
 			GetReportIssueForUserToken(_tenantReaderToken);
 		}
@@ -172,15 +176,18 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		}
 
 		[TestMethod]
-		public void GET_IssueReport_eachrole()
+		public void GET_IssueReport_eachwritecapablerole()
 		{
 			Console.WriteLine("Check with tenant admin token.");
 			CheckIssueReportWithUserToken(_tenantAdminToken); 
 			Console.WriteLine("Check with tenant writer token.");
 			CheckIssueReportWithUserToken(_tenantWriterToken);
-			// this test was written before change was made so that only writers
-			// and above could report issues. The next step will fail when that
-			// change is implemented.
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void GET_IssueReport_asreader_shouldthrow()
+		{
 			Console.WriteLine("Check with tenant reader token.");
 			CheckIssueReportWithUserToken(_tenantReaderToken);
 		}
@@ -801,6 +808,14 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Console.WriteLine($"Shared TenantId = {_sharedTenantId}");
 
 			}
+
+			Console.WriteLine($"Set tenant roles for users.");
+			string setUserRoleUriTemplate = $"{UriBase}/Tenant/Tenant/UserAuthorization?tenantId={_sharedTenantId}";
+			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, setUserRoleUriTemplate+$"&userId={_sharedTenantWriterId}&userTenantAuthorization=2", _adminToken);
+			webResponse = webRequest.GetResponse();
+			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, setUserRoleUriTemplate + $"&userId={_sharedTenantReaderId}&userTenantAuthorization=3", _adminToken);
+			webResponse = webRequest.GetResponse();
+
 		}
 
 		private void GetAdminToken()

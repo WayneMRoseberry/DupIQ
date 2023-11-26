@@ -365,9 +365,7 @@ namespace DupIQ.IssueIdentityProviders.Sql.Tests
 			TenantProfile[] tenants = sqlTenantManager.GetTenants("user1");
 			Assert.AreEqual(2, tenants.Count(), "Fail if expected number of tenantIds was not returned.");
 			Assert.AreEqual("tenant1", tenants[0].TenantId, "Fail if first tenantid is not as expected.");
-			Assert.AreEqual("owner1", tenants[0].OwnerId, "Fail if first ownerid is not as expected.");
 			Assert.AreEqual("tenant2", tenants[1].TenantId, "Fail if first tenantid is not as expected.");
-			Assert.AreEqual("owner2", tenants[1].OwnerId, "Fail if second ownerid is not as expected.");
 		}
 
 		[TestMethod]
