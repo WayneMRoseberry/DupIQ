@@ -17,7 +17,6 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 	//[ApiKey]
 	public class IssueProfilesController : IssueIdentityControllerBaseClass
 	{
-		ILogger<IssueProfilesController> logger;
 		IConfiguration _configuration;
 
 		public IssueProfilesController(IConfiguration configuration, ILogger<IssueProfilesController> logger)

@@ -13,7 +13,6 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 	[ApiController]
 	public class AdminController : IssueIdentityControllerBaseClass
 	{
-		ILogger logger;
 		IConfiguration _configuration;
 		public AdminController(IConfiguration configuration, ILogger<AdminController> logger)
 		{

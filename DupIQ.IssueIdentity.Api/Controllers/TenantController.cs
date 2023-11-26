@@ -11,7 +11,6 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 	[ApiController]
 	public class TenantController : IssueIdentityControllerBaseClass
 	{
-		ILogger<TenantController> logger;
 		IConfiguration _configuration;
 
 		public TenantController(ILogger<TenantController> logger, IConfiguration configuration)

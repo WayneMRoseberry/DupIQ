@@ -11,11 +11,12 @@ namespace DupIQ.IssueIdentityAPI
 		const string tenantRoleDeveloper = "TenantRole_Developer";
 		const string tenantRoleWriter = "TenantRole_Writer";
 		const string tenantRoleReader = "TenantRole_Reader";
+		internal ILogger logger;
 
 		//[FromHeader]
 		public string ApiKey { get; set; }
 
-		internal static bool CheckIfBelowServiceAuthorizationLevel(UserServiceAuthorization serviceAuth, UserServiceAuthorization checkAgainst)
+		internal bool CheckIfBelowServiceAuthorizationLevel(UserServiceAuthorization serviceAuth, UserServiceAuthorization checkAgainst)
 		{
 			if (serviceAuth >= checkAgainst)
 			{
@@ -24,21 +25,23 @@ namespace DupIQ.IssueIdentityAPI
 			return false;
 		}
 
-		internal static bool CheckIfCurrentUserMatchesUserId(string userId, ClaimsIdentity? identity)
+		internal bool CheckIfCurrentUserMatchesUserId(string userId, ClaimsIdentity? identity)
 		{
 			string identityId = identity.FindFirst("userId").Value;
+			this.logger.LogInformation($"CheckIfCurrentUserMatchesUserId: userId={userId}, currentUser={identityId}");
 			bool idCompare = identityId.Equals(userId);
 			return idCompare;
 		}
 
-		internal static bool CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization roleLevel, UserTenantAuthorization authorization)
+		internal bool CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization roleLevel, UserTenantAuthorization authorization)
 		{
 			return authorization >= roleLevel;
 		}
 
-		internal static UserTenantAuthorization GetHighestTenantRoleForIdentity(string tenantId, ClaimsIdentity? identity)
+		internal UserTenantAuthorization GetHighestTenantRoleForIdentity(string tenantId, ClaimsIdentity? identity)
 		{
 			UserTenantAuthorization authorization = UserTenantAuthorization.None;
+			string userId = identity.FindFirst("userId").Value.ToString();
 			if (userIsInRoleForTenant(tenantId, identity, tenantRoleAdmin))
 			{
 				authorization = UserTenantAuthorization.Admin;
@@ -55,7 +58,7 @@ namespace DupIQ.IssueIdentityAPI
 			{
 				authorization = UserTenantAuthorization.Reader;
 			}
-
+			this.logger.LogInformation($"GetHighestTenantRoleForIdentity: userId:{userId}, tenantId:{tenantId}, role:{authorization}");
 			return authorization;
 
 			static string[] splitClaimString(string adminclaimstring)
@@ -70,7 +73,7 @@ namespace DupIQ.IssueIdentityAPI
 			}
 		}
 
-		internal static UserServiceAuthorization GetUserServiceAuthorizationFromIdentityClaim(ClaimsIdentity? identity)
+		internal UserServiceAuthorization GetUserServiceAuthorizationFromIdentityClaim(ClaimsIdentity? identity)
 		{
 			string serviceClaim = identity.FindFirst("ServiceRole").Value.ToString();
 			UserServiceAuthorization serviceAuth = (UserServiceAuthorization)Enum.Parse(typeof(UserServiceAuthorization), serviceClaim);
