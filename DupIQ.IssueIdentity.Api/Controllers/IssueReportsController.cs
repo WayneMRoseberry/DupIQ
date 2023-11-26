@@ -33,9 +33,17 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public IEnumerable<IssueReport> GetForTenant(string issueid, string tenantId, string projectId, int page = 0)
 		{
 			logger.LogInformation("GetIssueReports. issueId:{issueid}, tenantId:{tenantId}", issueid, tenantId);
-			if (DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.None) &&
+CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.None, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity)))
 			{
-				return GlobalConfiguration.Repository.GetIssueReportsFromProject(new IssueProfile() { IssueId = issueid }, tenantId, projectId, page);
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				if (DoesApiKeyMatchForTenant(tenantId))
+				{
+					return GlobalConfiguration.Repository.GetIssueReportsFromProject(new IssueProfile() { IssueId = issueid }, tenantId, projectId, page);
+				}
 			}
 			return null;
 		}
@@ -50,9 +58,17 @@ namespace DupIQ.IssueIdentityAPI.Controllers
 		public IssueReport GetIssueReport(string instanceId, string tenantId, string projectId)
 		{
 			logger.LogInformation("GetIssueReport instanceId={instanceId}, tenantId={tenantId}", instanceId, tenantId);
-			if (DoesApiKeyMatchForTenant(tenantId))
+			if (CheckIfBelowServiceAuthorizationLevel(GetUserServiceAuthorizationFromIdentityClaim(HttpContext.User.Identity as ClaimsIdentity), UserServiceAuthorization.None) &&
+CheckIfUserTenantRoleIsBelowAuthorzationLevel(UserTenantAuthorization.None, GetHighestTenantRoleForIdentity(tenantId, HttpContext.User.Identity as ClaimsIdentity)))
 			{
-				return GlobalConfiguration.Repository.IssueReport(instanceId, tenantId, projectId);
+				Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+			}
+			else
+			{
+				if (DoesApiKeyMatchForTenant(tenantId))
+				{
+					return GlobalConfiguration.Repository.IssueReport(instanceId, tenantId, projectId);
+				}
 			}
 			return null;
 		}
