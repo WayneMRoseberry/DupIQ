@@ -12,21 +12,31 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		// need to move it somewhere that is not compiled or shared
 		private string _serviceadmin = string.Empty;
 		private string UriBase = string.Empty;
+		private string _adminToken = string.Empty;
 		private string _sharedTenantId = string.Empty;
 		private string _sharedTenantWriterId = string.Empty;
 		private string _sharedTenantAdminId = string.Empty;
 		private string _sharedTenantReaderId = string.Empty;
-		private string _adminToken = string.Empty;
 		private string _tenantAdminToken = string.Empty;
 		private string _tenantWriterToken = string.Empty;
 		private string _tenantReaderToken = string.Empty;
+		private string _sharedTenantId2 = string.Empty;
+		private string _sharedTenantWriterId2 = string.Empty;
+		private string _sharedTenantAdminId2 = string.Empty;
+		private string _sharedTenantReaderId2 = string.Empty;
+		private string _tenantAdminToken2 = string.Empty;
+		private string _tenantWriterToken2 = string.Empty;
+		private string _tenantReaderToken2 = string.Empty;
 
-		string _tenantName = "test_tenant";
+		string _tenantName = "test_tenant1"; 
+		string _tenantName2 = "test_tenant2";
 		string _ownerId = "user1";
 		string _ownerEmail = "owneremail";
 		string _ownerName = "user_one";
 		string _sharedProjectId = "testproject";
 		string _sharedProjectName = "test_project";
+		string _sharedProjectId2 = "testproject2";
+		string _sharedProjectName2 = "test_project2";
 
 		[TestInitialize]
 		public void InitializeDupIq()
@@ -43,8 +53,9 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		public void Cleanup()
 		{
 			string deleteAllRecordsRequestUri = IssueIdentityApiTestsHelpers.BuildDeleteAllRecordsRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
-			
-			HttpWebRequest webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllRecordsRequestUri, _adminToken);
+
+			string userToken = _adminToken;
+			HttpWebRequest webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllRecordsRequestUri, userToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
@@ -52,36 +63,32 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Console.WriteLine($"Response to delete all records: {responseBody}");
 			}
 			string deleteAllTenantsRequestUri = IssueIdentityApiTestsHelpers.BuildDeleteAllTenantsRequestUri(UriBase);
-			
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllTenantsRequestUri, _adminToken);
+
+			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteAllTenantsRequestUri, userToken);
 			webResponse = webRequest.GetResponse();
 			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
 			{
 				string responseBody = responseReader.ReadToEnd();
 				Console.WriteLine($"Response to delete all tenants: {responseBody}");
 			}
-			
-			string deleteUserRequestUriTemplate = $"{UriBase}/IssueIdentityUser?userId=";
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate+_sharedTenantAdminId, _adminToken);
-			webResponse = webRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string responseBody = responseReader.ReadToEnd();
-			}
-			
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantReaderId, _adminToken);
-			webResponse = webRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string responseBody = responseReader.ReadToEnd();
-			}
-			webRequest = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate + _sharedTenantWriterId, _adminToken);
-			webResponse = webRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string responseBody = responseReader.ReadToEnd();
-			}
+			DeleteUser(userToken, _sharedTenantAdminId);
+			DeleteUser(userToken, _sharedTenantReaderId);
+			DeleteUser(userToken, _sharedTenantWriterId);
+			DeleteUser(userToken, _sharedTenantAdminId2);
+			DeleteUser(userToken, _sharedTenantReaderId2);
+			DeleteUser(userToken, _sharedTenantWriterId2);
+		}
 
+		private void DeleteUser(string userToken, string userId)
+		{
+			string deleteUserRequestUriTemplate1 = $"{UriBase}/IssueIdentityUser?userId=";
+
+			HttpWebRequest webRequest2 = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate1 + userId, userToken);
+			WebResponse webResponse2 = webRequest2.GetResponse();
+			using (var responseReader = new StreamReader(webResponse2.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+			}
 		}
 
 		[TestMethod]
@@ -108,11 +115,31 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			GetReportIssueForUserToken(_tenantReaderToken);
 		}
 
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void GET_ReportIssue_tenantadmin2_tenant1_shouldthrow()
+		{
+			Console.WriteLine("Check with tenantadmin2 token.");
+			GetReportIssueForUserToken(_tenantAdminToken2);
+		}
+
+		[TestMethod]
+		public void GET_ReportIssue_tenantadmin2_tenant2()
+		{
+			Console.WriteLine("Check with tenantadmin2 token.");
+			GetReportIssueForUserTokenAndTenant(_tenantAdminToken2, "tenantadmin 2 reporting new issue", _sharedTenantId2, _sharedProjectId2);
+		}
+
 		private void GetReportIssueForUserToken(string userToken)
 		{
 			string testMessage = "somethingnew";
 
-			string requestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, _sharedTenantId, _sharedProjectId);
+			GetReportIssueForUserTokenAndTenant(userToken, testMessage, _sharedTenantId, _sharedProjectId);
+		}
+
+		private void GetReportIssueForUserTokenAndTenant(string userToken, string testMessage, string tenantId, string projectId)
+		{
+			string requestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, tenantId, projectId);
 
 			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(requestUri, userToken);
 			WebResponse webResponse = webRequest.GetResponse();
@@ -192,11 +219,31 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			CheckIssueReportWithUserToken(_tenantReaderToken);
 		}
 
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void GET_IssueReport_tenantadmin2_againsttenant1_shouldthrow()
+		{
+			Console.WriteLine("Check with tenant2 admin token.");
+			CheckIssueReportWithUserToken(_tenantAdminToken2);
+		}
+
+		[TestMethod]
+		public void GET_IssueReport_tenantadmin2_againsttenant2()
+		{
+			Console.WriteLine("Check with tenant2 admin token.");
+			CheckIssueReportWithUserTokenAndTenant(_tenantAdminToken2,"different tenant message", _sharedTenantId2, _sharedProjectId2);
+		}
+
 		private void CheckIssueReportWithUserToken(string userToken)
 		{
 			string testMessage = "somethingnew";
 
-			string issueReportGetRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, _sharedTenantId, _sharedProjectId);
+			CheckIssueReportWithUserTokenAndTenant(userToken, testMessage, _sharedTenantId, _sharedProjectId);
+		}
+
+		private void CheckIssueReportWithUserTokenAndTenant(string userToken, string testMessage, string tenantId, string projectId)
+		{
+			string issueReportGetRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, tenantId, projectId);
 
 			Console.WriteLine("First report the issue.");
 			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportGetRequestUri, userToken);
@@ -212,7 +259,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
 			}
 
-			string relatedIssueReportsGetRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsGetRequestUri(issueId, UriBase, _sharedTenantId, _sharedProjectId);
+			string relatedIssueReportsGetRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsGetRequestUri(issueId, UriBase, tenantId, projectId);
 			Console.WriteLine("Then get the related issue report id back from the issueId we got on the report.");
 			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetRequestUri, userToken);
 			webResponse = webRequest.GetResponse();
@@ -227,7 +274,7 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			}
 
 			Console.WriteLine("Use the instanceId to retrieve the IssueReport.");
-			string issueReportsGetIssueReportRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportGetRequestUri(instanceId, UriBase, _sharedTenantId, _sharedProjectId);
+			string issueReportsGetIssueReportRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportGetRequestUri(instanceId, UriBase, tenantId, projectId);
 			Console.WriteLine($"get issuereport uri: {issueReportsGetIssueReportRequestUri}");
 			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportsGetIssueReportRequestUri, userToken);
 			webResponse = webRequest.GetResponse();
@@ -727,21 +774,27 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 		private void CreateSharedProject()
 		{
+			CreateProject(_adminToken, _sharedTenantId, _sharedProjectId, _sharedProjectName, _sharedTenantAdminId);
+			CreateProject(_adminToken, _sharedTenantId2, _sharedProjectId2, _sharedProjectName2, _sharedTenantAdminId2);
+		}
+
+		private void CreateProject(string userToken, string tenantId, string projectId, string projectName, string projectOwnerId)
+		{
 			Project testProject = new Project()
 			{
-				tenantId = _sharedTenantId,
-				projectId = _sharedProjectId,
-				name = _sharedProjectName,
-				ownerId = _sharedTenantAdminId,
+				tenantId = tenantId,
+				projectId = projectId,
+				name = projectName,
+				ownerId = projectOwnerId,
 				similarityThreshold = 0.95f
 			};
-			string addProjectUriBase = $"{UriBase}/Tenant/Project?tenantId={_sharedTenantId}";
+			string addProjectUriBase = $"{UriBase}/Tenant/Project?tenantId={tenantId}";
 			string serializedProjectJson = JsonSerializer.Serialize(testProject);
 
 			Console.WriteLine($" addProjectUriBase:{addProjectUriBase}");
 			Console.WriteLine($" serializedProjectJson:{serializedProjectJson}");
 
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(serializedProjectJson, addProjectUriBase, _adminToken);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(serializedProjectJson, addProjectUriBase, userToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
@@ -753,12 +806,18 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 		private void CreateSharedUsers()
 		{
-
-			_sharedTenantWriterId = CreateSharedUserWithName("testtenantwriter_"+System.Guid.NewGuid().ToString());
+			_sharedTenantWriterId = CreateSharedUserWithName("testtenantwriter1_"+System.Guid.NewGuid().ToString());
 			Console.WriteLine($"Shared TenantWriterId = {_sharedTenantWriterId}");
-			_sharedTenantAdminId = CreateSharedUserWithName("testtenantadmin_" + System.Guid.NewGuid().ToString());
+			_sharedTenantAdminId = CreateSharedUserWithName("testtenantadmin1_" + System.Guid.NewGuid().ToString());
 			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantAdminId}");
-			_sharedTenantReaderId = CreateSharedUserWithName("testtenantreader_" + System.Guid.NewGuid().ToString());
+			_sharedTenantReaderId = CreateSharedUserWithName("testtenantreader1_" + System.Guid.NewGuid().ToString());
+			Console.WriteLine($"Shared TenantReaderId = {_sharedTenantReaderId}");
+
+			_sharedTenantWriterId2 = CreateSharedUserWithName("testtenantwriter2_" + System.Guid.NewGuid().ToString());
+			Console.WriteLine($"Shared TenantWriterId = {_sharedTenantWriterId}");
+			_sharedTenantAdminId2 = CreateSharedUserWithName("testtenantadmin2_" + System.Guid.NewGuid().ToString());
+			Console.WriteLine($"Shared TenantAdminId = {_sharedTenantAdminId}");
+			_sharedTenantReaderId2 = CreateSharedUserWithName("testtenantreader2_" + System.Guid.NewGuid().ToString());
 			Console.WriteLine($"Shared TenantReaderId = {_sharedTenantReaderId}");
 		}
 
@@ -805,26 +864,33 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 		private void CreateSharedTenant()
 		{
-			string AddTenantURITemplate = $"{UriBase}/Tenant/Tenant?tenantName={_tenantName}&ownerId={_sharedTenantAdminId}&ownerEmail={_ownerEmail}&ownerName={_ownerName}";
+			_sharedTenantId = CreateTenantAndSetWriterAndReader(_sharedTenantAdminId, _tenantName, _adminToken, _sharedTenantWriterId, _sharedTenantReaderId);
+			_sharedTenantId2 = CreateTenantAndSetWriterAndReader(_sharedTenantAdminId2, _tenantName2, _adminToken, _sharedTenantWriterId2, _sharedTenantReaderId2);
+		}
+
+		private string CreateTenantAndSetWriterAndReader(string tenantAdminId, string tenantName, string userToken, string tenantWriterId, string tenantReaderId)
+		{
+			string tenantId;
+			string AddTenantURITemplate = $"{UriBase}/Tenant/Tenant?tenantName={tenantName}&ownerId={tenantAdminId}&ownerEmail={_ownerEmail}&ownerName={_ownerName}";
 			Console.WriteLine($"Create tenant Uri:{AddTenantURITemplate}");
 
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, AddTenantURITemplate, _adminToken);
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, AddTenantURITemplate, userToken);
 			WebResponse webResponse = webRequest.GetResponse();
 			using (var stream = webResponse.GetResponseStream())
 			{
 				StreamReader sr = new StreamReader(stream);
-				_sharedTenantId = sr.ReadToEnd().Replace("\"", string.Empty);
-				Console.WriteLine($"Shared TenantId = {_sharedTenantId}");
+				tenantId = sr.ReadToEnd().Replace("\"", string.Empty);
+				Console.WriteLine($"Shared TenantId = {tenantId}");
 
 			}
 
 			Console.WriteLine($"Set tenant roles for users.");
-			string setUserRoleUriTemplate = $"{UriBase}/Tenant/Tenant/UserAuthorization?tenantId={_sharedTenantId}";
-			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, setUserRoleUriTemplate+$"&userId={_sharedTenantWriterId}&userTenantAuthorization=2", _adminToken);
+			string setUserRoleUriTemplate = $"{UriBase}/Tenant/Tenant/UserAuthorization?tenantId={tenantId}";
+			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, setUserRoleUriTemplate + $"&userId={tenantWriterId}&userTenantAuthorization=2", userToken);
 			webResponse = webRequest.GetResponse();
-			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, setUserRoleUriTemplate + $"&userId={_sharedTenantReaderId}&userTenantAuthorization=3", _adminToken);
+			webRequest = IssueIdentityApiTestsHelpers.CreatePostRequest(string.Empty, setUserRoleUriTemplate + $"&userId={tenantReaderId}&userTenantAuthorization=3", userToken);
 			webResponse = webRequest.GetResponse();
-
+			return tenantId;
 		}
 
 		private void GetAdminToken()
@@ -863,6 +929,12 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			_tenantWriterToken = GetClaimForUserId(_sharedTenantWriterId);
 			Console.WriteLine($"Shared tenant writer token = {_tenantWriterToken}");
 			_tenantReaderToken = GetClaimForUserId(_sharedTenantReaderId);
+			Console.WriteLine($"Shared tenant reader token = {_tenantReaderToken}");
+			_tenantAdminToken2 = GetClaimForUserId(_sharedTenantAdminId2);
+			Console.WriteLine($"Shared tenant admin token = {_tenantAdminToken}");
+			_tenantWriterToken2 = GetClaimForUserId(_sharedTenantWriterId2);
+			Console.WriteLine($"Shared tenant writer token = {_tenantWriterToken}");
+			_tenantReaderToken2 = GetClaimForUserId(_sharedTenantReaderId2);
 			Console.WriteLine($"Shared tenant reader token = {_tenantReaderToken}");
 		}
 
