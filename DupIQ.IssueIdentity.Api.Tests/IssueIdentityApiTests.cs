@@ -79,18 +79,6 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			DeleteUser(userToken, _sharedTenantWriterId2);
 		}
 
-		private void DeleteUser(string userToken, string userId)
-		{
-			string deleteUserRequestUriTemplate1 = $"{UriBase}/IssueIdentityUser?userId=";
-
-			HttpWebRequest webRequest2 = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate1 + userId, userToken);
-			WebResponse webResponse2 = webRequest2.GetResponse();
-			using (var responseReader = new StreamReader(webResponse2.GetResponseStream()))
-			{
-				string responseBody = responseReader.ReadToEnd();
-			}
-		}
-
 		[TestMethod]
 		public void GET_ReportIssue()
 		{
@@ -128,29 +116,6 @@ namespace DupIQ.IssueIdentity.Api.Tests
 		{
 			Console.WriteLine("Check with tenantadmin2 token.");
 			GetReportIssueForUserTokenAndTenant(_tenantAdminToken2, "tenantadmin 2 reporting new issue", _sharedTenantId2, _sharedProjectId2);
-		}
-
-		private void GetReportIssueForUserToken(string userToken)
-		{
-			string testMessage = "somethingnew";
-
-			GetReportIssueForUserTokenAndTenant(userToken, testMessage, _sharedTenantId, _sharedProjectId);
-		}
-
-		private void GetReportIssueForUserTokenAndTenant(string userToken, string testMessage, string tenantId, string projectId)
-		{
-			string requestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, tenantId, projectId);
-
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(requestUri, userToken);
-			WebResponse webResponse = webRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
-				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
-				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
-			}
 		}
 
 		[TestMethod]
@@ -234,59 +199,6 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			CheckIssueReportWithUserTokenAndTenant(_tenantAdminToken2,"different tenant message", _sharedTenantId2, _sharedProjectId2);
 		}
 
-		private void CheckIssueReportWithUserToken(string userToken)
-		{
-			string testMessage = "somethingnew";
-
-			CheckIssueReportWithUserTokenAndTenant(userToken, testMessage, _sharedTenantId, _sharedProjectId);
-		}
-
-		private void CheckIssueReportWithUserTokenAndTenant(string userToken, string testMessage, string tenantId, string projectId)
-		{
-			string issueReportGetRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, tenantId, projectId);
-
-			Console.WriteLine("First report the issue.");
-			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportGetRequestUri, userToken);
-			WebResponse webResponse = webRequest.GetResponse();
-			string issueId = string.Empty;
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
-				issueId = issueProfileResponse.issueId;
-				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
-				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
-			}
-
-			string relatedIssueReportsGetRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsGetRequestUri(issueId, UriBase, tenantId, projectId);
-			Console.WriteLine("Then get the related issue report id back from the issueId we got on the report.");
-			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetRequestUri, userToken);
-			webResponse = webRequest.GetResponse();
-			string instanceId = string.Empty;
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				var relatedIssueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
-				Assert.AreEqual(1, relatedIssueReportsResponse.Count(), "Fail if there is any other quantity than one IssueReport related to the issue profile.");
-				instanceId = relatedIssueReportsResponse[0].instanceId;
-			}
-
-			Console.WriteLine("Use the instanceId to retrieve the IssueReport.");
-			string issueReportsGetIssueReportRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportGetRequestUri(instanceId, UriBase, tenantId, projectId);
-			Console.WriteLine($"get issuereport uri: {issueReportsGetIssueReportRequestUri}");
-			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportsGetIssueReportRequestUri, userToken);
-			webResponse = webRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				var returnedIssueReport = JsonSerializer.Deserialize<IssueReport>(response);
-				Assert.AreEqual(instanceId, returnedIssueReport.instanceId, "Fail if we did not get the IssueReport we were looking for.");
-			}
-		}
-
 		[TestMethod]
 		public void POST_IssueProfile()
 		{
@@ -311,66 +223,20 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			CheckPostIssueProfileWithUserToken(_tenantReaderToken);
 		}
 
-		private void CheckPostIssueProfileWithUserToken(string userToken)
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void POST_IssueProfile_tenantadmin2_tenant1_shouldtrown()
 		{
-			Console.WriteLine("Get existing list of issue profiles.");
-			string getIssueProfilesUri = $"{UriBase}/IssueProfiles?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			IssueProfile[] existingIssueProfiles;
-			HttpWebRequest getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, userToken);
-			var webResponse = getIssueProfilesRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				existingIssueProfiles = JsonSerializer.Deserialize<IssueProfile[]>(response);
-			}
 
-			Console.WriteLine("Create a new issue profile.");
-			string testIssueId = "testissueid_" + System.Guid.NewGuid().ToString();
-			IssueProfile issueProfile = new IssueProfile()
-			{
-				exampleMessage = "test message",
-				isNew = true,
-				firstReportedDate = DateTime.Now,
-				issueId = testIssueId,
-				providerId = "test"
-			};
+			Console.WriteLine("Check with tenant reader token.");
+			CheckPostIssueProfileWithUserToken(_tenantAdminToken2);
+		}
 
-			string postBody = JsonSerializer.Serialize(issueProfile);
-
-			string postIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueProfileUri, userToken);
-
-			webResponse = request.GetResponse();
-
-			Console.WriteLine("Check list of issue profiles after creating new issue profile.");
-
-			IssueProfile[] newIssueProfilesList;
-			getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, userToken);
-			webResponse = getIssueProfilesRequest.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				newIssueProfilesList = JsonSerializer.Deserialize<IssueProfile[]>(response);
-			}
-
-			Assert.IsTrue(newIssueProfilesList.Count() > existingIssueProfiles.Count(), "Fail if there was not a new issueProfile added to the existing list of IssueProfiles.");
-
-			Console.WriteLine("Check if getting issue profile returns what we expected.");
-			var getIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?issueId={testIssueId}&tenantId={_sharedTenantId}&projectId={_sharedProjectId}";
-			Console.WriteLine($"uri={getIssueProfileUri}");
-			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfileUri, userToken);
-			webResponse = request.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				IssueProfile newProfile = JsonSerializer.Deserialize<IssueProfile>(response);
-				Assert.AreEqual(testIssueId, newProfile.issueId, "fail if we did not get back the expected issue id from call to GET IssueProfile.");
-				Assert.AreEqual("SqlIssueDbProvider", newProfile.providerId, "fail if the system did not override our non-existent provider with the default.");
-				Assert.IsFalse(newProfile.isNew, "fail if if isNew was not overridden and set to false.");
-			}
+		[TestMethod]
+		public void POST_IssueProfile_tenantadmin2_tenant2_shouldtrown()
+		{
+			Console.WriteLine("Check with tenant reader token.");
+			CheckPostIssueProfileWithUserTokenAndTenant(_tenantAdminToken2, _sharedTenantId2, _sharedProjectId2);
 		}
 
 		[TestMethod]
@@ -464,102 +330,66 @@ namespace DupIQ.IssueIdentity.Api.Tests
 
 		[TestMethod]
 		[ExpectedException(typeof(System.Net.WebException))]
-		public void POST_ReportIssues_reader()
+		public void POST_ReportIssues_reader_shouldthrow()
 		{
 			Console.WriteLine("Check with tenant reader token.");
 			CheckPostReportIssuesForUserToken(_tenantReaderToken, "really a reader should not be able to post anything");
 		}
 
-		private void CheckPostReportIssuesForUserToken(string userToken)
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void POST_ReportIssues_tenantadmin2_shouldthrow()
 		{
-			const string issueString = "this is a test";
-			CheckPostReportIssuesForUserToken(userToken, issueString);
+			Console.WriteLine("Check with tenant admin2 token.");
+			CheckPostReportIssuesForUserToken(_sharedTenantAdminId2, "really a reader should not be able to post anything");
 		}
 
-		private void CheckPostReportIssuesForUserToken(string userToken, string issueString)
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void POST_ReportIssues_tenantadmin2_tenant2_shouldthrow()
 		{
-			IssueReport[] issueReports = new IssueReport[] {
-				new IssueReport()
-				{
-					instanceId = "testinstance1",
-					issueId = "changes",
-					issueDate = DateTime.Now,
-					issueMessage = issueString
-				},
-				new IssueReport()
-				{
-					instanceId = "testinstance2",
-					issueId = "changes",
-					issueDate = DateTime.Now,
-					issueMessage = issueString
-				}
-			};
-			string postBody = JsonSerializer.Serialize(issueReports);
-
-			string uriBase = UriBase;
-			string _sharedTenantId1 = _sharedTenantId;
-			string _sharedProjectId1 = _sharedProjectId;
-			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsPostRequestUri(uriBase, _sharedTenantId1, _sharedProjectId1);
-			Console.WriteLine("Create array of issueReports.");
-			Console.WriteLine($"POST to: {requestUri}");
-			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, userToken);
-
-			var webResponse = request.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile[]>(response);
-
-				Assert.AreEqual(2, issueProfileResponse.Count(), "Fail if we don't get two profiles returned.");
-				Assert.AreEqual(issueProfileResponse[0].issueId, issueProfileResponse[1].issueId, "Fail if both issue profiles do not have the same issueId.");
-				Assert.AreNotEqual(issueProfileResponse[0].isNew, issueProfileResponse[1].isNew, "Fail if both issue profiles have the same isNew value.");
-			}
+			Console.WriteLine("Check with tenant admin2 token.");
+			CheckPostReportIssuesForUserTokenAndTenant(_sharedTenantAdminId2, "really a reader should not be able to post anything",_sharedTenantId2, _sharedProjectId2);
 		}
 
 		[TestMethod]
 		public void POST_IssueProfiles_Related()
 		{
-			IssueReport issueReport = new IssueReport()
-			{
-				instanceId = "testinstance",
-				issueId = "changes",
-				issueDate = DateTime.Now,
-				issueMessage = "this is a test"
-			};
-			string postBody = JsonSerializer.Serialize(issueReport);
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId, _sharedProjectId, _adminToken);
+		}
 
-			Console.WriteLine("First post an issue report.");
+		[TestMethod]
+		public void POST_IssueProfiles_Related_Reader()
+		{
+			Console.WriteLine("Post as tenant admin, who was write privelege.");
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId, _sharedProjectId, _adminToken);
+			CheckIssueProfilesRelated_assumepriorreport_UserTokenAndTenant(_sharedTenantId, _sharedProjectId, _tenantReaderToken);
+		}
 
-			string reportIssuePostRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssuePostRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
-			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri, _adminToken);
+		[TestMethod]
+		public void POST_IssueProfiles_Related_AdminAndWriterRoles()
+		{
+			Console.WriteLine("Post as tenant admin.");
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId, _sharedProjectId, _tenantAdminToken);
+			Console.WriteLine("Post as tenant writer.");
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId, _sharedProjectId, _tenantWriterToken);
+		}
 
-			var webResponse = request.GetResponse();
-			string issueId = string.Empty;
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				issueId = JsonSerializer.Deserialize<IssueProfile>(response).issueId;
-				Assert.AreNotEqual(string.Empty, issueId, "Fail if the issueId is still empty.");
-			}
+		[TestMethod]
+		[ExpectedException(typeof(System.Net.WebException))]
+		public void POST_IssueProfiles_Related_AdminTenant2_Tenant1()
+		{
+			Console.WriteLine("Post as tenant2 admin.");
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId, _sharedProjectId, _tenantAdminToken2);
+		}
 
-			Console.WriteLine("Then search for related issue profiles from that same issue report.");
-
-			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueProfilesRelatedPostRequestUri(UriBase, _sharedTenantId, _sharedProjectId);
-			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, _adminToken);
-
-			webResponse = request.GetResponse();
-			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
-			{
-				string response = responseReader.ReadToEnd();
-				Console.WriteLine(response);
-				var issueProfileResponse = JsonSerializer.Deserialize<RelatedIssueProfile[]>(response);
-
-				Console.WriteLine(issueProfileResponse);
-
-				Assert.AreEqual(1, issueProfileResponse.Count(), "something to fail on.");
-				Assert.AreEqual(issueId, issueProfileResponse[0].issueId, "fail if the first issueId is not the same one we got back reporting the issue.");
-			}
+		[TestMethod]
+		public void POST_IssueProfiles_Related_AdminAndWriterRolesTenant2()
+		{
+			Console.WriteLine("Post as tenant2 admin.");
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId2, _sharedProjectId2, _tenantAdminToken2);
+			Console.WriteLine("Post as tenant2 writer.");
+			CheckIssueProfilesRelatedUserTokenAndTenant(_sharedTenantId2, _sharedProjectId2, _tenantWriterToken2);
 		}
 
 		[TestMethod]
@@ -772,6 +602,255 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			Assert.IsTrue(relatedProfilesCount > 1, "Fail if there is not more than 1 related issue profile returned.");
 		}
 
+		#region private_methods
+
+		private void CheckIssueProfilesRelatedUserTokenAndTenant(string tenantId, string projectId, string userToken)
+		{
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
+
+			Console.WriteLine("First post an issue report.");
+
+			string reportIssuePostRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssuePostRequestUri(UriBase, tenantId, projectId);
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, reportIssuePostRequestUri, userToken);
+
+			var webResponse = request.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				issueId = JsonSerializer.Deserialize<IssueProfile>(response).issueId;
+				Assert.AreNotEqual(string.Empty, issueId, "Fail if the issueId is still empty.");
+			}
+
+			Console.WriteLine("Then search for related issue profiles from that same issue report.");
+
+			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueProfilesRelatedPostRequestUri(UriBase, tenantId, projectId);
+			request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, userToken);
+
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<RelatedIssueProfile[]>(response);
+
+				Console.WriteLine(issueProfileResponse);
+
+				Assert.AreEqual(1, issueProfileResponse.Count(), "something to fail on.");
+				Assert.AreEqual(issueId, issueProfileResponse[0].issueId, "fail if the first issueId is not the same one we got back reporting the issue.");
+			}
+		}
+
+		private void CheckIssueProfilesRelated_assumepriorreport_UserTokenAndTenant(string tenantId, string projectId, string userToken)
+		{
+			IssueReport issueReport = new IssueReport()
+			{
+				instanceId = "testinstance",
+				issueId = "changes",
+				issueDate = DateTime.Now,
+				issueMessage = "this is a test"
+			};
+			string postBody = JsonSerializer.Serialize(issueReport);
+
+
+
+			Console.WriteLine("Then search for related issue profiles from that same issue report.");
+
+			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueProfilesRelatedPostRequestUri(UriBase, tenantId, projectId);
+			var request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, userToken);
+
+			var webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<RelatedIssueProfile[]>(response);
+
+				Console.WriteLine(issueProfileResponse);
+
+				Assert.IsTrue(issueProfileResponse.Count() > 0, "As long as one or more returned we are fine");
+			}
+		}
+
+		private void CheckPostIssueProfileWithUserToken(string userToken)
+		{
+			Console.WriteLine("Get existing list of issue profiles.");
+			string tenantId = _sharedTenantId;
+			string projectId = _sharedProjectId;
+			CheckPostIssueProfileWithUserTokenAndTenant(userToken, tenantId, projectId);
+		}
+
+		private void CheckPostIssueProfileWithUserTokenAndTenant(string userToken, string tenantId, string projectId)
+		{
+			string getIssueProfilesUri = $"{UriBase}/IssueProfiles?tenantId={tenantId}&projectId={projectId}";
+			IssueProfile[] existingIssueProfiles;
+			HttpWebRequest getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, userToken);
+			var webResponse = getIssueProfilesRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				existingIssueProfiles = JsonSerializer.Deserialize<IssueProfile[]>(response);
+			}
+
+			Console.WriteLine("Create a new issue profile.");
+			string testIssueId = "testissueid_" + System.Guid.NewGuid().ToString();
+			IssueProfile issueProfile = new IssueProfile()
+			{
+				exampleMessage = "test message",
+				isNew = true,
+				firstReportedDate = DateTime.Now,
+				issueId = testIssueId,
+				providerId = "test"
+			};
+
+			string postBody = JsonSerializer.Serialize(issueProfile);
+
+			string postIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?tenantId={tenantId}&projectId={projectId}";
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, postIssueProfileUri, userToken);
+
+			webResponse = request.GetResponse();
+
+			Console.WriteLine("Check list of issue profiles after creating new issue profile.");
+
+			IssueProfile[] newIssueProfilesList;
+			getIssueProfilesRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfilesUri, userToken);
+			webResponse = getIssueProfilesRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				newIssueProfilesList = JsonSerializer.Deserialize<IssueProfile[]>(response);
+			}
+
+			Assert.IsTrue(newIssueProfilesList.Count() > existingIssueProfiles.Count(), "Fail if there was not a new issueProfile added to the existing list of IssueProfiles.");
+
+			Console.WriteLine("Check if getting issue profile returns what we expected.");
+			var getIssueProfileUri = $"{UriBase}/IssueProfiles/IssueProfile?issueId={testIssueId}&tenantId={tenantId}&projectId={projectId}";
+			Console.WriteLine($"uri={getIssueProfileUri}");
+			request = IssueIdentityApiTestsHelpers.CreateGetRequest(getIssueProfileUri, userToken);
+			webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile newProfile = JsonSerializer.Deserialize<IssueProfile>(response);
+				Assert.AreEqual(testIssueId, newProfile.issueId, "fail if we did not get back the expected issue id from call to GET IssueProfile.");
+				Assert.AreEqual("SqlIssueDbProvider", newProfile.providerId, "fail if the system did not override our non-existent provider with the default.");
+				Assert.IsFalse(newProfile.isNew, "fail if if isNew was not overridden and set to false.");
+			}
+		}
+
+		private void CheckIssueReportWithUserToken(string userToken)
+		{
+			string testMessage = "somethingnew";
+
+			CheckIssueReportWithUserTokenAndTenant(userToken, testMessage, _sharedTenantId, _sharedProjectId);
+		}
+
+		private void CheckIssueReportWithUserTokenAndTenant(string userToken, string testMessage, string tenantId, string projectId)
+		{
+			string issueReportGetRequestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, tenantId, projectId);
+
+			Console.WriteLine("First report the issue.");
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportGetRequestUri, userToken);
+			WebResponse webResponse = webRequest.GetResponse();
+			string issueId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				issueId = issueProfileResponse.issueId;
+				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
+				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
+			}
+
+			string relatedIssueReportsGetRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsGetRequestUri(issueId, UriBase, tenantId, projectId);
+			Console.WriteLine("Then get the related issue report id back from the issueId we got on the report.");
+			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(relatedIssueReportsGetRequestUri, userToken);
+			webResponse = webRequest.GetResponse();
+			string instanceId = string.Empty;
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var relatedIssueReportsResponse = JsonSerializer.Deserialize<IssueReport[]>(response);
+				Assert.AreEqual(1, relatedIssueReportsResponse.Count(), "Fail if there is any other quantity than one IssueReport related to the issue profile.");
+				instanceId = relatedIssueReportsResponse[0].instanceId;
+			}
+
+			Console.WriteLine("Use the instanceId to retrieve the IssueReport.");
+			string issueReportsGetIssueReportRequestUri = IssueIdentityApiTestsHelpers.BuildIssueReportGetRequestUri(instanceId, UriBase, tenantId, projectId);
+			Console.WriteLine($"get issuereport uri: {issueReportsGetIssueReportRequestUri}");
+			webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(issueReportsGetIssueReportRequestUri, userToken);
+			webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var returnedIssueReport = JsonSerializer.Deserialize<IssueReport>(response);
+				Assert.AreEqual(instanceId, returnedIssueReport.instanceId, "Fail if we did not get the IssueReport we were looking for.");
+			}
+		}
+
+		private void CheckPostReportIssuesForUserToken(string userToken)
+		{
+			const string issueString = "this is a test";
+			CheckPostReportIssuesForUserToken(userToken, issueString);
+		}
+
+		private void CheckPostReportIssuesForUserToken(string userToken, string issueString)
+		{
+			CheckPostReportIssuesForUserTokenAndTenant(userToken, issueString, _sharedTenantId, _sharedProjectId);
+		}
+
+		private void CheckPostReportIssuesForUserTokenAndTenant(string userToken, string issueString, string tenantId, string projectId)
+		{
+			IssueReport[] issueReports = new IssueReport[] {
+				new IssueReport()
+				{
+					instanceId = "testinstance1",
+					issueId = "changes",
+					issueDate = DateTime.Now,
+					issueMessage = issueString
+				},
+				new IssueReport()
+				{
+					instanceId = "testinstance2",
+					issueId = "changes",
+					issueDate = DateTime.Now,
+					issueMessage = issueString
+				}
+			};
+			string postBody = JsonSerializer.Serialize(issueReports);
+
+			string uriBase = UriBase;
+			string requestUri = IssueIdentityApiTestsHelpers.BuildIssueReportsPostRequestUri(uriBase, tenantId, projectId);
+			Console.WriteLine("Create array of issueReports.");
+			Console.WriteLine($"POST to: {requestUri}");
+			HttpWebRequest request = IssueIdentityApiTestsHelpers.CreatePostRequest(postBody, requestUri, userToken);
+
+			var webResponse = request.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				var issueProfileResponse = JsonSerializer.Deserialize<IssueProfile[]>(response);
+
+				Assert.AreEqual(2, issueProfileResponse.Count(), "Fail if we don't get two profiles returned.");
+				Assert.AreEqual(issueProfileResponse[0].issueId, issueProfileResponse[1].issueId, "Fail if both issue profiles do not have the same issueId.");
+				Assert.AreNotEqual(issueProfileResponse[0].isNew, issueProfileResponse[1].isNew, "Fail if both issue profiles have the same isNew value.");
+			}
+		}
+
 		private void CreateSharedProject()
 		{
 			CreateProject(_adminToken, _sharedTenantId, _sharedProjectId, _sharedProjectName, _sharedTenantAdminId);
@@ -801,6 +880,41 @@ namespace DupIQ.IssueIdentity.Api.Tests
 				StreamReader sr = new StreamReader(stream);
 				string projectBody = sr.ReadToEnd();
 				Console.WriteLine($"project response:{projectBody}");
+			}
+		}
+
+		private void DeleteUser(string userToken, string userId)
+		{
+			string deleteUserRequestUriTemplate1 = $"{UriBase}/IssueIdentityUser?userId=";
+
+			HttpWebRequest webRequest2 = IssueIdentityApiTestsHelpers.CreateDeleteRequest(deleteUserRequestUriTemplate1 + userId, userToken);
+			WebResponse webResponse2 = webRequest2.GetResponse();
+			using (var responseReader = new StreamReader(webResponse2.GetResponseStream()))
+			{
+				string responseBody = responseReader.ReadToEnd();
+			}
+		}
+
+		private void GetReportIssueForUserToken(string userToken)
+		{
+			string testMessage = "somethingnew";
+
+			GetReportIssueForUserTokenAndTenant(userToken, testMessage, _sharedTenantId, _sharedProjectId);
+		}
+
+		private void GetReportIssueForUserTokenAndTenant(string userToken, string testMessage, string tenantId, string projectId)
+		{
+			string requestUri = IssueIdentityApiTestsHelpers.BuildReportIssueGetRequestUri(testMessage, UriBase, tenantId, projectId);
+
+			WebRequest webRequest = IssueIdentityApiTestsHelpers.CreateGetRequest(requestUri, userToken);
+			WebResponse webResponse = webRequest.GetResponse();
+			using (var responseReader = new StreamReader(webResponse.GetResponseStream()))
+			{
+				string response = responseReader.ReadToEnd();
+				Console.WriteLine(response);
+				IssueProfile issueProfileResponse = JsonSerializer.Deserialize<IssueProfile>(response);
+				Assert.AreEqual(testMessage, issueProfileResponse.exampleMessage, "Fail if the example message of the returned issue is not what was sent.");
+				Assert.AreEqual(true, issueProfileResponse.isNew, "Fail if the issue was not reported as new.");
 			}
 		}
 
@@ -977,5 +1091,6 @@ namespace DupIQ.IssueIdentity.Api.Tests
 			_serviceadmin = testConfigJson.GetProperty("serviceadminid").GetString();
 			Console.WriteLine($"UriBase:{UriBase}, ServiceAdmin: {_serviceadmin}");
 		}
+		#endregion
 	}
 }
